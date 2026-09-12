@@ -8,16 +8,27 @@
     "scheme": "grow365-mobile",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "net.grow365.app"
     },
-    "android": {},
+    "android": {
+      "package": "net.grow365.app"
+    },
     "web": {
       "favicon": "./assets/images/icon.png"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e6ed346c-2163-4f3e-9603-415ddaf4e106"
+      }
+    },
+    "owner": "nadunchandrabahu"
   }
 }
