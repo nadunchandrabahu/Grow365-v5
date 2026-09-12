@@ -1,6 +1,6 @@
-# [Project name]
+# Grow365
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A calm devotional, study, and reflective journaling app designed for quiet daily use.
 
 ## Run & Operate
 
@@ -34,7 +34,13 @@ _Describe the high-level user-facing capabilities of this app once they exist._
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Use strict TypeScript and small reusable components.
+- Never use mock or placeholder data. If a service is unavailable, build a clean integration point and state what is missing.
+- Never put secrets in source.
+- Data-backed screens need real loading, empty, and error states.
+- The existing live Supabase schema is read-only for app development: read generated types and never create or alter tables.
+- Ask before adding any dependency.
+- State limitations plainly rather than adding workarounds.
 
 ## Gotchas
 
