@@ -41,8 +41,13 @@ export default function SignInScreen() {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
-      <Typography variant="h2" style={styles.title}>Welcome Back</Typography>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+      accessibilityLabel="Sign in"
+    >
+      <Typography variant="h2" style={styles.title} accessibilityRole="header">Welcome Back</Typography>
       <Typography variant="body" color="muted" style={styles.subtitle}>
         Sign in to continue your daily reflections.
       </Typography>
@@ -53,6 +58,8 @@ export default function SignInScreen() {
         keyboardType="email-address"
         autoCapitalize="none"
         value={email}
+        accessibilityLabel="Email address"
+        accessibilityHint="Enter the email address for your Grow365 account"
         onChangeText={(value) => {
           setEmail(value);
           setErrors((current) => ({ ...current, email: undefined, form: undefined }));
@@ -64,6 +71,8 @@ export default function SignInScreen() {
         placeholder="Enter your password"
         secureTextEntry
         value={password}
+        accessibilityLabel="Password"
+        accessibilityHint="Enter your Grow365 password"
         onChangeText={(value) => {
           setPassword(value);
           setErrors((current) => ({ ...current, password: undefined, form: undefined }));
@@ -71,20 +80,26 @@ export default function SignInScreen() {
         error={errors.password}
       />
       {errors.form ? (
-        <Typography variant="body" color="destructive" style={styles.formError}>
+        <Typography variant="body" color="destructive" style={styles.formError} accessibilityRole="alert">
           {errors.form}
         </Typography>
       ) : null}
       
-      <Link href="/reset-password" style={styles.forgotPassword}>
+      <Link
+        href="/reset-password"
+        style={styles.forgotPassword}
+        accessibilityRole="link"
+        accessibilityLabel="Forgot your password"
+        accessibilityHint="Opens password reset"
+      >
         <Typography variant="caption" color="muted">Forgot your password?</Typography>
       </Link>
       
-      <Button title="Sign In" onPress={() => void handleSignIn()} loading={submitting} style={styles.button} />
+      <Button title="Sign In" onPress={() => void handleSignIn()} loading={submitting} style={styles.button} accessibilityRole="button" accessibilityLabel="Sign in" />
       
       <View style={styles.footer}>
         <Typography variant="caption" color="muted">Don't have an account? </Typography>
-        <Link href="/sign-up">
+        <Link href="/sign-up" accessibilityRole="link" accessibilityLabel="Create an account">
           <Typography variant="caption" style={{ color: colors.primary, fontFamily: 'Inter_600SemiBold' }}>Sign Up</Typography>
         </Link>
       </View>
@@ -100,5 +115,5 @@ const styles = StyleSheet.create({
   forgotPassword: { alignSelf: 'flex-start', marginBottom: 32 },
   formError: { marginBottom: 20 },
   button: { marginBottom: 24 },
-  footer: { flexDirection: 'row', justifyContent: 'center' },
+  footer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' },
 });

@@ -43,8 +43,9 @@ export default function UpdatePasswordScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
+      accessibilityLabel="Update password"
     >
-      <Typography variant="h2" style={styles.title}>Choose a new password</Typography>
+      <Typography variant="h2" style={styles.title} accessibilityRole="header">Choose a new password</Typography>
       <Typography variant="body" color="muted" style={styles.subtitle}>
         Use at least 8 characters, then enter it again to confirm.
       </Typography>
@@ -52,6 +53,8 @@ export default function UpdatePasswordScreen() {
         label="New Password"
         secureTextEntry
         value={password}
+        accessibilityLabel="New password"
+        accessibilityHint="Enter a new password with at least 8 characters"
         onChangeText={(value) => {
           setPassword(value);
           setError(undefined);
@@ -61,13 +64,15 @@ export default function UpdatePasswordScreen() {
         label="Confirm New Password"
         secureTextEntry
         value={confirmation}
+        accessibilityLabel="Confirm new password"
+        accessibilityHint="Enter the same new password again"
         onChangeText={(value) => {
           setConfirmation(value);
           setError(undefined);
         }}
         error={error}
       />
-      <Button title="Save New Password" onPress={() => void handleUpdate()} loading={submitting} />
+      <Button title="Save New Password" onPress={() => void handleUpdate()} loading={submitting} accessibilityRole="button" accessibilityLabel="Save new password" />
     </ScrollView>
   );
 }

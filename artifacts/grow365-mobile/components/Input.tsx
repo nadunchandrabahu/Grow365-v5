@@ -1,15 +1,28 @@
 import React from 'react';
 import { TextInput as RNTextInput, TextInputProps, View, StyleSheet } from 'react-native';
 import { useColors } from '@/hooks/useColors';
-import { Typography } from './Typography';
+import { MAX_FONT_SIZE_MULTIPLIER, Typography } from './Typography';
 
 interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
 }
 
-export function Input({ label, error, style, ...props }: InputProps) {
+export function Input({
+  label,
+  error,
+  style,
+  accessibilityLabel: propAccessibilityLabel,
+  accessibilityHint: propAccessibilityHint,
+  accessibilityState: propAccessibilityState,
+  ...props
+}: InputProps) {
   const colors = useColors();
+  const accessibilityLabel = propAccessibilityLabel ?? label ?? props.placeholder;
+  const accessibilityHint = [
+    propAccessibilityHint,
+    error ? `Error: ${error}` : undefined,
+  ].filter(Boolean).join(' ') || 'Enter text';
   
   return (
     <View style={styles.container}>
@@ -31,9 +44,24 @@ export function Input({ label, error, style, ...props }: InputProps) {
         ]}
         placeholderTextColor={colors.mutedForeground}
         {...props}
+        allowFontScaling
+        maxFontSizeMultiplier={MAX_FONT_SIZE_MULTIPLIER}
+        accessibilityLabel={accessibilityLabel}
+        accessibilityHint={accessibilityHint}
+        accessibilityState={{
+          ...propAccessibilityState,
+          disabled: props.editable === false,
+        }}
       />
       {error && (
-        <Typography variant="caption" color="destructive" style={styles.error}>
+        <Typography
+          variant="caption"
+          color="destructive"
+          style={styles.error}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="polite"
+          accessible
+        >
           {error}
         </Typography>
       )}
@@ -53,6 +81,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 14,
+    minHeight: 44,
     fontSize: 17,
     fontFamily: 'Inter_400Regular',
   },

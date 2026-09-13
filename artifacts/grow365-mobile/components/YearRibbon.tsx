@@ -17,8 +17,8 @@ export function YearRibbon({ currentDay, completedDays, dayToDevoId }: YearRibbo
   const { width } = useWindowDimensions();
 
   const MARK_WIDTH = 4;
-  const MARK_MARGIN = 6;
-  const ITEM_SIZE = MARK_WIDTH + MARK_MARGIN;
+  const TOUCH_TARGET = 44;
+  const ITEM_SIZE = TOUCH_TARGET;
 
   useEffect(() => {
     if (scrollViewRef.current && currentDay > 0) {
@@ -80,7 +80,6 @@ export function YearRibbon({ currentDay, completedDays, dayToDevoId }: YearRibbo
                     borderColor,
                     borderWidth,
                     width: MARK_WIDTH,
-                    marginRight: MARK_MARGIN,
                     borderRadius: MARK_WIDTH / 2,
                   }
                 ]}
@@ -98,17 +97,18 @@ export function YearRibbon({ currentDay, completedDays, dayToDevoId }: YearRibbo
                     }
                   }}
                   style={styles.touchArea}
-                  hitSlop={{ top: 12, bottom: 12, left: 2, right: 2 }}
                   accessibilityRole="link"
-                  accessibilityLabel={`Journey day ${day}`}
+                  accessibilityLabel={`Journey day ${day}${isToday ? ', today' : isCompleted ? ', completed' : ''}`}
                   accessibilityHint="Opens this day’s devotional"
+                  accessibilityState={{ selected: isToday }}
+                  accessibilityValue={{ text: isCompleted ? 'Completed' : 'Not completed' }}
                 >
                   {mark}
                 </Pressable>
               );
             }
 
-            return <View key={day} style={styles.touchArea}>{mark}</View>;
+            return <View key={day} style={styles.touchArea} accessible={false}>{mark}</View>;
           })}
         </ScrollView>
       </View>
@@ -133,7 +133,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   touchArea: {
+    width: 44,
     height: 48,
+    alignItems: 'center',
     justifyContent: 'center',
   },
   mark: {

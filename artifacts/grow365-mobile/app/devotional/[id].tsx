@@ -48,7 +48,7 @@ const INJECTED_JS = `
       meta.name = 'viewport';
       document.head.appendChild(meta);
     }
-    meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+    meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes';
 
     function hideAdobeBranding() {
       document.querySelectorAll('a[href*="adobe.com/express"]').forEach(function(link) {
@@ -174,6 +174,7 @@ export default function DevotionalReaderScreen() {
   const webViewRef = useRef<WebView>(null);
   const [webViewError, setWebViewError] = useState(false);
   const [failedCoverUrl, setFailedCoverUrl] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const devotionalQuery = useDevotional(user?.id, devotionalId);
   const progressQuery = useReadingProgress(user?.id, devotionalId);
@@ -281,6 +282,7 @@ export default function DevotionalReaderScreen() {
 
   const handleShare = async (): Promise<void> => {
     try {
+      setActionError(null);
       await Share.share({
         title: devotional.title,
         url: devotional.express_url,
@@ -289,18 +291,27 @@ export default function DevotionalReaderScreen() {
             ? `Read "${devotional.title}" on Grow365:\n${devotional.express_url}`
             : undefined,
       });
-    } catch {}
+    } catch {
+      setActionError('This reading could not be shared. Please try again.');
+    }
   };
 
   const toggleBookmark = () => {
     if (toggleBookmarkMutation.isPending) return;
-    toggleBookmarkMutation.mutate(isBookmarked);
+    setActionError(null);
+    toggleBookmarkMutation.mutate(isBookmarked, {
+      onError: () => setActionError('Your bookmark could not be updated. Please try again.'),
+    });
   };
 
   const toggleComplete = () => {
     if (saveProgress.isPending) return;
     if (!isCompleted) {
-      saveProgress.mutate({ scrollPct: 100, completedAt: new Date().toISOString() });
+      setActionError(null);
+      saveProgress.mutate(
+        { scrollPct: 100, completedAt: new Date().toISOString() },
+        { onError: () => setActionError('Your reading progress could not be saved. Please try again.') },
+      );
     }
   };
 
@@ -332,6 +343,8 @@ export default function DevotionalReaderScreen() {
           onPress={() => setWebViewError(false)} 
           style={{ marginTop: 32 }} 
           variant="outline" 
+          accessibilityRole="button"
+          accessibilityLabel="Try loading the devotional again"
         />
       </View>
     </View>
@@ -348,14 +361,21 @@ export default function DevotionalReaderScreen() {
           borderBottomColor: colors.border 
         }
       ]}>
-        <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12}>
+        <Pressable
+          onPress={() => router.back()}
+          style={styles.backButton}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          accessibilityHint="Returns to the previous screen"
+        >
           <Ionicons name="chevron-back" size={28} color={colors.foreground} />
         </Pressable>
         <View style={styles.topBarTitle}>
           <Typography variant="caption" color="muted">
             {displayDate.toUpperCase()}
           </Typography>
-          <Typography variant="reference" color="foreground" numberOfLines={1}>
+          <Typography variant="reference" color="foreground">
             {`DAY ${devotional.day_of_year} · ${
               devotional.devotional_series?.name ?? 'GROW365'
             }`.toUpperCase()}
@@ -381,6 +401,7 @@ export default function DevotionalReaderScreen() {
                 initialScrollRestored.current = true;
               }
             }}
+            accessibilityLabel={`Devotional reading: ${devotional.title}`}
             onError={() => setWebViewError(true)}
             onHttpError={(syntheticEvent) => {
               const { statusCode, url } = syntheticEvent.nativeEvent;
@@ -422,7 +443,7 @@ export default function DevotionalReaderScreen() {
             startInLoadingState={true}
             renderLoading={() => (
               <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]}>
-                <LoadingState message="" />
+                <LoadingState message="Opening today’s devotional…" />
               </View>
             )}
           />
@@ -438,11 +459,18 @@ export default function DevotionalReaderScreen() {
           borderTopColor: colors.border 
         }
       ]}>
+        {actionError && (
+          <Typography variant="caption" color="destructive" style={styles.actionError} accessibilityRole="alert">
+            {actionError}
+          </Typography>
+        )}
         <Pressable
           onPress={toggleBookmark}
           style={styles.actionButton}
           accessibilityRole="button"
           accessibilityLabel={isBookmarked ? 'Remove bookmark' : 'Bookmark devotional'}
+          accessibilityHint={isBookmarked ? 'Removes this devotional from your bookmarks' : 'Saves this devotional for later'}
+          accessibilityState={{ selected: isBookmarked, busy: toggleBookmarkMutation.isPending }}
         >
           <Ionicons 
             name={isBookmarked ? 'bookmark' : 'bookmark-outline'} 
@@ -457,6 +485,7 @@ export default function DevotionalReaderScreen() {
           style={styles.actionButton}
           accessibilityRole="button"
           accessibilityLabel="Journal this devotional"
+          accessibilityHint="Opens a private journal entry linked to this devotional"
         >
           <Ionicons name="create-outline" size={24} color={colors.foreground} />
           <Typography variant="caption" style={styles.actionLabel}>Journal</Typography>
@@ -467,6 +496,7 @@ export default function DevotionalReaderScreen() {
           style={styles.actionButton}
           accessibilityRole="button"
           accessibilityLabel="Discuss in a group"
+          accessibilityHint="Opens group discussion for this devotional"
         >
           <Ionicons name="chatbubbles-outline" size={24} color={colors.foreground} />
           <Typography variant="caption" style={styles.actionLabel}>Discuss</Typography>
@@ -477,6 +507,7 @@ export default function DevotionalReaderScreen() {
           style={styles.actionButton}
           accessibilityRole="button"
           accessibilityLabel="Share devotional"
+          accessibilityHint="Opens sharing options"
         >
           <Ionicons name="share-outline" size={24} color={colors.foreground} />
           <Typography variant="caption" style={styles.actionLabel}>Share</Typography>
@@ -487,6 +518,8 @@ export default function DevotionalReaderScreen() {
           style={styles.actionButton}
           accessibilityRole="button"
           accessibilityLabel={isCompleted ? 'Devotional complete' : 'Mark devotional complete'}
+          accessibilityHint={isCompleted ? 'This devotional is already marked complete' : 'Marks this devotional as complete'}
+          accessibilityState={{ disabled: isCompleted || saveProgress.isPending, busy: saveProgress.isPending }}
           disabled={isCompleted || saveProgress.isPending}
         >
           <Ionicons 
@@ -508,6 +541,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   topBar: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
@@ -523,6 +557,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     gap: 4,
+    minWidth: 0,
   },
   content: {
     flex: 1,
@@ -533,6 +568,7 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-around',
     borderTopWidth: 1,
@@ -540,14 +576,24 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   actionButton: {
+    flex: 1,
+    minWidth: 64,
+    minHeight: 56,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
     gap: 4,
   },
   actionLabel: {
+    flexShrink: 1,
     fontSize: 10,
-    lineHeight: 12,
+    lineHeight: 14,
+    textAlign: 'center',
+  },
+  actionError: {
+    width: '100%',
+    textAlign: 'center',
+    marginBottom: 8,
   },
   offlineContainer: {
     flex: 1,

@@ -10,6 +10,7 @@ import { useSubscriptionDetails, type SubscriptionDetails } from '@/hooks/useSub
 import { canManageSubscription, manageableStorePlatform, openSubscriptionManagement } from '@/lib/subscription-management';
 import { authErrorMessage } from '@/lib/auth-errors';
 import { Link } from 'expo-router';
+import { ErrorState, LoadingState } from '@/components/State';
 
 function formatDate(isoString: string) {
   return new Date(isoString).toLocaleDateString(undefined, {
@@ -78,7 +79,7 @@ function SubscriptionStatus({ details, onManage }: { details: SubscriptionDetail
     <Card style={styles.statusCard}>
       <View style={styles.statusHeader}>
         <Feather name={details.active ? "check-circle" : "info"} size={24} color={details.active ? colors.success : colors.mutedForeground} />
-        <Typography variant="h3" style={{ marginLeft: 12 }}>
+        <Typography variant="h3" style={{ marginLeft: 12, flex: 1, minWidth: 0 }}>
           {details.active ? 'Subscription Active' : 'Subscription Inactive'}
         </Typography>
       </View>
@@ -92,6 +93,9 @@ function SubscriptionStatus({ details, onManage }: { details: SubscriptionDetail
           variant="outline"
           onPress={onManage}
           style={styles.manageButton}
+          accessibilityRole="button"
+          accessibilityLabel="Manage subscription"
+          accessibilityHint="Opens subscription management for your store"
         />
       )}
       {details.active && !isGranted && !manageable && (
@@ -144,8 +148,12 @@ export default function SubscriptionScreen() {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      contentContainerStyle={styles.content}
+      accessibilityLabel="Grow365 Plus subscription"
+    >
+      <View style={styles.header} accessible accessibilityRole="header">
         <Feather name="book-open" size={42} color={colors.foreground} style={styles.icon} />
         <Typography variant="h1" align="center" style={styles.title}>Grow365 Plus</Typography>
         <Typography variant="body" color="muted" align="center" style={styles.subtitle}>
@@ -154,15 +162,19 @@ export default function SubscriptionScreen() {
       </View>
 
       {subscriptionQuery.isLoading ? (
-        <Typography variant="caption" color="muted" align="center" style={styles.loadingText}>Loading status...</Typography>
+        <LoadingState message="Checking your subscription…" />
       ) : subscriptionQuery.isError ? (
-        <Typography variant="caption" color="destructive" align="center" style={styles.loadingText}>Unable to load subscription details.</Typography>
+        <ErrorState
+          title="Subscription details are unavailable"
+          description="Check your connection and try again."
+          onRetry={() => void subscriptionQuery.refetch()}
+        />
       ) : details && (details.active || details.status) ? (
         <SubscriptionStatus details={details} onManage={manage} />
       ) : null}
 
       <Card style={styles.featuresCard}>
-        <Typography variant="h3" style={styles.featuresTitle}>What's included</Typography>
+        <Typography variant="h3" style={styles.featuresTitle} accessibilityRole="header">What's included</Typography>
         <View style={styles.featureList}>
           {[
             'Browse the full 365-day devotional archive',
@@ -184,7 +196,7 @@ export default function SubscriptionScreen() {
 
       {(!details || !details.active) && (
         <View style={styles.plansContainer}>
-          <Typography variant="h3" style={styles.plansTitle}>Choose a plan</Typography>
+          <Typography variant="h3" style={styles.plansTitle} accessibilityRole="header">Choose a plan</Typography>
 
           <TouchableOpacity
             activeOpacity={0.8}
@@ -239,22 +251,31 @@ export default function SubscriptionScreen() {
             onPress={handlePurchaseAttempt}
             style={styles.subscribeButton}
             size="large"
+            accessibilityRole="button"
+            accessibilityLabel={selectedPlan === 'monthly' ? 'Start 7-day free trial' : 'Subscribe annually'}
+            accessibilityHint="Opens purchase information"
           />
         </View>
       )}
 
-      {error ? <Typography variant="caption" color="destructive" style={styles.error} align="center">{error}</Typography> : null}
+      {error ? <Typography variant="caption" color="destructive" style={styles.error} align="center" accessibilityRole="alert">{error}</Typography> : null}
 
       <View style={styles.footerLinks}>
-        <TouchableOpacity onPress={handleRestoreAttempt} style={styles.footerLink}>
+        <TouchableOpacity
+          onPress={handleRestoreAttempt}
+          style={styles.footerLink}
+          accessibilityRole="button"
+          accessibilityLabel="Restore purchases"
+          accessibilityHint="Attempts to restore purchases from your store"
+        >
           <Typography variant="caption" color="foreground">Restore Purchases</Typography>
         </TouchableOpacity>
         <View style={styles.legalLinks}>
-          <Link href="/terms" style={styles.footerLink}>
+          <Link href="/terms" style={styles.footerLink} accessibilityRole="link" accessibilityLabel="Terms of Service">
             <Typography variant="caption" color="muted">Terms of Service</Typography>
           </Link>
           <Typography variant="caption" color="muted" style={styles.dot}>•</Typography>
-          <Link href="/privacy" style={styles.footerLink}>
+          <Link href="/privacy" style={styles.footerLink} accessibilityRole="link" accessibilityLabel="Privacy Policy">
             <Typography variant="caption" color="muted">Privacy Policy</Typography>
           </Link>
         </View>
@@ -265,7 +286,7 @@ export default function SubscriptionScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 24, paddingBottom: 80 },
+  content: { padding: 24, paddingBottom: 80, flexGrow: 1 },
   header: { alignItems: 'center', marginBottom: 40, marginTop: 20 },
   icon: { marginBottom: 20 },
   title: { marginBottom: 12 },
@@ -274,7 +295,7 @@ const styles = StyleSheet.create({
   loadingText: { marginBottom: 30 },
 
   statusCard: { marginBottom: 30, padding: 24 },
-  statusHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  statusHeader: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 },
   statusText: { lineHeight: 24, marginBottom: 20 },
   manageButton: { marginTop: 8 },
   manageHint: { marginTop: 16 },
@@ -296,15 +317,17 @@ const styles = StyleSheet.create({
   },
   planOptionHeader: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'flex-start',
+    gap: 12,
   },
   subscribeButton: { marginTop: 8 },
 
   error: { marginTop: 12, marginBottom: 20 },
 
-  footerLinks: { alignItems: 'center', gap: 20, marginTop: 20 },
-  footerLink: { padding: 8 },
-  legalLinks: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  footerLinks: { alignItems: 'center', gap: 20, marginTop: 20, flexWrap: 'wrap' },
+  footerLink: { padding: 8, minHeight: 44, justifyContent: 'center' },
+  legalLinks: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' },
   dot: { marginHorizontal: 8 },
 });

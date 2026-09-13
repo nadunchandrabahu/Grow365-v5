@@ -14,7 +14,7 @@ export default function StudyScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const groupsQuery = useMyGroups(user?.id);
 
   return (
@@ -22,7 +22,14 @@ export default function StudyScreen() {
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 20, paddingBottom: 120 }]}>
         <Typography variant="h1" style={styles.title}>Study</Typography>
         
-        <TouchableOpacity onPress={() => router.push('/devotional/past')} activeOpacity={0.7}>
+        <TouchableOpacity
+          onPress={() => router.push('/devotional/past')}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Open past devotionals"
+          accessibilityHint="Revisit previous readings and reflections"
+          accessibilityState={{ disabled: false }}
+        >
           <Card style={styles.planCard}>
             <Typography variant="h3" style={styles.cardTitle}>Past Devotionals</Typography>
             <Typography variant="body" color="muted">Revisit previous readings and reflections.</Typography>
@@ -36,6 +43,10 @@ export default function StudyScreen() {
             onPress={() => router.push('/groups/create')} 
             style={[styles.actionBox, { backgroundColor: colors.secondary, borderRadius: colors.radius }]}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Create a group"
+            accessibilityHint="Start a private Bible study group"
+            accessibilityState={{ disabled: false }}
           >
             <Typography variant="body" style={styles.actionText}>Create Group</Typography>
           </TouchableOpacity>
@@ -43,12 +54,16 @@ export default function StudyScreen() {
             onPress={() => router.push('/groups/join')} 
             style={[styles.actionBox, { backgroundColor: colors.secondary, borderRadius: colors.radius }]}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Join a group"
+            accessibilityHint="Enter an invite code and password to join a group"
+            accessibilityState={{ disabled: false }}
           >
             <Typography variant="body" style={styles.actionText}>Join Group</Typography>
           </TouchableOpacity>
         </View>
 
-        {groupsQuery.isLoading ? (
+        {authLoading || groupsQuery.isLoading ? (
           <LoadingState message="Loading your groups..." />
         ) : groupsQuery.isError ? (
           <ErrorState
@@ -62,6 +77,10 @@ export default function StudyScreen() {
               key={group.id}
               onPress={() => router.push(`/groups/${group.id}`)}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`Open group ${group.name}`}
+              accessibilityHint="View this group's devotionals, notes, questions, and members"
+              accessibilityState={{ disabled: false }}
             >
               <Card style={styles.planCard}>
                 <GroupCover path={group.cover_path} userId={user?.id} style={styles.groupCover} />
@@ -72,7 +91,7 @@ export default function StudyScreen() {
                   {group.name}
                 </Typography>
                 {group.description && (
-                  <Typography variant="body" color="muted" numberOfLines={2}>
+                  <Typography variant="body" color="muted">
                     {group.description}
                   </Typography>
                 )}
@@ -85,6 +104,8 @@ export default function StudyScreen() {
               icon="users"
               title="No groups yet"
               description="Create a group or join one to begin sharing notes and questions."
+              actionLabel="Create a group"
+              onAction={() => router.push('/groups/create')}
             />
           </Card>
         )}
@@ -100,8 +121,8 @@ const styles = StyleSheet.create({
   planCard: { padding: 20, marginBottom: 24 },
   cardTitle: { marginBottom: 8 },
   sectionTitle: { marginBottom: 16, marginTop: 16 },
-  groupActions: { flexDirection: 'row', gap: 16, marginBottom: 24 },
-  actionBox: { flex: 1, padding: 16, alignItems: 'center' },
+  groupActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginBottom: 24 },
+  actionBox: { flexGrow: 1, flexBasis: 160, minHeight: 44, padding: 16, alignItems: 'center', justifyContent: 'center' },
   actionText: { fontFamily: 'Inter_500Medium' },
   groupLabel: { marginBottom: 8 },
   groupCover: { minHeight: 116, marginBottom: 16 },

@@ -4,3 +4,4 @@
 - [Subscription event authority](subscription-event-authority.md) — store events are recorded before processing; database entitlement, not client state, controls access through the paid-through date.
 - [Group study authority](group-study-authority.md) — group passwords and join throttling stay inside RPCs; content and moderation authorization stays in database RLS.
 - [Account deletion lifecycle](account-deletion-lifecycle.md) — deletion blocks group owners, preserves discussion text as Former member, and purges private database, Storage, and device data.
+- [Reminder delivery model](reminder-delivery-model.md) — reminders open a profile-timezone “today” resolver; Android local delivery is foreground-reconciled but not exact across background DST changes.

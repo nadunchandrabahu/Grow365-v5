@@ -31,11 +31,13 @@ export function TodayDevotionalCard({ devotional }: Props) {
         style={styles.imageContainer}
         accessibilityRole="link"
         accessibilityLabel={`Read ${devotional.title}`}
+        accessibilityHint="Opens this devotional"
       >
         {coverUrl && failedCoverUrl !== coverUrl ? (
           <Image 
             source={{ uri: coverUrl }} 
             style={styles.image} 
+            accessible={false}
             contentFit="cover" 
             cachePolicy="disk" 
             recyclingKey={coverUrl}
@@ -44,7 +46,7 @@ export function TodayDevotionalCard({ devotional }: Props) {
           />
         ) : (
           <View style={[styles.fallbackImage, { backgroundColor: colors.muted }]}>
-            <Typography variant="h2" color="muted" align="center" style={{ opacity: 0.3 }}>
+            <Typography variant="h2" color="muted" align="center" style={{ opacity: 0.3 }} accessible={false}>
               GROW365
             </Typography>
           </View>
@@ -88,6 +90,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: '100%',
     aspectRatio: 16 / 9,
+    minHeight: 44,
   },
   image: {
     width: '100%',

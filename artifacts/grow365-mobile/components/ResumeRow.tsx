@@ -20,6 +20,15 @@ export function ResumeRow({ devotionalId, title, dayOfYear, scrollPct }: Props) 
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={() => router.push(`/devotional/${devotionalId}`)}
+      accessibilityRole="link"
+      accessibilityLabel={`Resume reading: ${title}`}
+      accessibilityHint="Opens this devotional"
+      accessibilityValue={{
+        min: 0,
+        max: 100,
+        now: Math.round(scrollPct),
+        text: `${Math.round(scrollPct)} percent complete`,
+      }}
       style={[styles.container, { backgroundColor: colors.secondary, borderRadius: colors.radius }]}
     >
       <View style={styles.content}>
@@ -27,7 +36,7 @@ export function ResumeRow({ devotionalId, title, dayOfYear, scrollPct }: Props) 
           <Typography variant="reference" color="accent">RESUME READING</Typography>
           <Typography variant="caption" color="muted">{Math.round(scrollPct)}%</Typography>
         </View>
-        <Typography variant="body" style={styles.title} numberOfLines={1}>
+          <Typography variant="body" style={styles.title}>
           {title}
         </Typography>
         
@@ -41,7 +50,7 @@ export function ResumeRow({ devotionalId, title, dayOfYear, scrollPct }: Props) 
         </View>
       </View>
       <View style={styles.iconContainer}>
-        <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+        <Feather name="chevron-right" size={20} color={colors.mutedForeground} accessible={false} />
       </View>
     </TouchableOpacity>
   );
@@ -51,6 +60,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 44,
     padding: 20,
     marginBottom: 40,
   },
@@ -60,6 +70,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
@@ -67,6 +78,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Inter_500Medium',
     marginBottom: 16,
+    flexShrink: 1,
   },
   progressTrack: {
     height: 4,

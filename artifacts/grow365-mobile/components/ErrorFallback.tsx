@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import { reloadAppAsync } from 'expo';
+import { MAX_FONT_SIZE_MULTIPLIER } from './Typography';
 
 export type ErrorFallbackProps = {
   error: Error;
@@ -54,6 +55,8 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
           onPress={() => setIsModalVisible(true)}
           accessibilityLabel="View error details"
           accessibilityRole="button"
+          accessibilityHint="Opens diagnostic error details"
+          accessibilityState={{ expanded: isModalVisible }}
           style={({ pressed }) => [
             styles.topButton,
             {
@@ -63,21 +66,25 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
             },
           ]}
         >
-          <Feather name="alert-circle" size={20} color={colors.foreground} />
+          <Feather name="alert-circle" size={20} color={colors.foreground} accessible={false} />
         </Pressable>
       ) : null}
 
       <View style={styles.content}>
-        <Text style={[styles.title, { color: colors.foreground }]}>
+        <Text style={[styles.title, { color: colors.foreground }]} allowFontScaling maxFontSizeMultiplier={MAX_FONT_SIZE_MULTIPLIER} accessibilityRole="header">
           Something went wrong
         </Text>
 
-        <Text style={[styles.message, { color: colors.mutedForeground }]}>
+        <Text style={[styles.message, { color: colors.mutedForeground }]} allowFontScaling maxFontSizeMultiplier={MAX_FONT_SIZE_MULTIPLIER}>
           Please reload the app to continue.
         </Text>
 
         <Pressable
           onPress={handleRestart}
+          accessibilityRole="button"
+          accessibilityLabel="Try Again"
+          accessibilityHint="Reloads the app"
+          accessibilityState={{ disabled: false, busy: false }}
           style={({ pressed }) => [
             styles.button,
             {
@@ -89,6 +96,8 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
         >
           <Text
             style={[styles.buttonText, { color: colors.primaryForeground }]}
+            allowFontScaling
+            maxFontSizeMultiplier={MAX_FONT_SIZE_MULTIPLIER}
           >
             Try Again
           </Text>
@@ -115,19 +124,21 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
                   { borderBottomColor: colors.border },
                 ]}
               >
-                <Text style={[styles.modalTitle, { color: colors.foreground }]}>
+                <Text style={[styles.modalTitle, { color: colors.foreground }]} allowFontScaling maxFontSizeMultiplier={MAX_FONT_SIZE_MULTIPLIER} accessibilityRole="header">
                   Error Details
                 </Text>
                 <Pressable
                   onPress={() => setIsModalVisible(false)}
                   accessibilityLabel="Close error details"
                   accessibilityRole="button"
+                  accessibilityHint="Closes error details"
+                  accessibilityState={{ disabled: false }}
                   style={({ pressed }) => [
                     styles.closeButton,
                     { opacity: pressed ? 0.6 : 1 },
                   ]}
                 >
-                  <Feather name="x" size={24} color={colors.foreground} />
+                  <Feather name="x" size={24} color={colors.foreground} accessible={false} />
                 </Pressable>
               </View>
 
@@ -153,6 +164,8 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
                         fontFamily: monoFont,
                       },
                     ]}
+                    allowFontScaling
+                    maxFontSizeMultiplier={MAX_FONT_SIZE_MULTIPLIER}
                     selectable
                   >
                     {formatErrorDetails()}
@@ -171,7 +184,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: '100%',
-    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
@@ -187,12 +199,10 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     textAlign: 'center',
-    lineHeight: 40,
   },
   message: {
     fontSize: 16,
     textAlign: 'center',
-    lineHeight: 24,
   },
   topButton: {
     position: 'absolute',
@@ -210,6 +220,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 24,
     minWidth: 200,
+    minHeight: 44,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -247,6 +258,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: '600',
+    flex: 1,
   },
   closeButton: {
     width: 44,
@@ -268,7 +280,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12,
-    lineHeight: 18,
     width: '100%',
   },
 });

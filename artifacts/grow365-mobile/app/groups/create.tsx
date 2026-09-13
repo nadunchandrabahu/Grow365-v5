@@ -117,13 +117,17 @@ export default function CreateGroupScreen() {
   });
 
   const pickCover = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 0.8,
-    });
-    if (!result.canceled) setCoverAsset(result.assets[0] ?? null);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
+      if (!result.canceled) setCoverAsset(result.assets[0] ?? null);
+    } catch {
+      setError('The image picker could not open. Check your photo permissions and try again.');
+    }
   };
 
   return (
@@ -137,7 +141,14 @@ export default function CreateGroupScreen() {
         Start a private Bible study and invite people with your code and password.
       </Typography>
 
-      <Pressable onPress={() => void pickCover()} style={[styles.coverPicker, { borderColor: colors.border }]}>
+      <Pressable
+        onPress={() => void pickCover()}
+        style={[styles.coverPicker, { borderColor: colors.border }]}
+        accessibilityRole="button"
+        accessibilityLabel={coverAsset ? 'Change group cover image' : 'Add group cover image'}
+        accessibilityHint="Choose an optional private cover image from your photo library"
+        accessibilityState={{ selected: Boolean(coverAsset) }}
+      >
         {coverAsset ? (
           <Image source={{ uri: coverAsset.uri }} style={styles.cover} />
         ) : (
@@ -156,6 +167,8 @@ export default function CreateGroupScreen() {
         placeholder="Morning Fellowship"
         value={name}
         onChangeText={setName}
+        accessibilityLabel="Group name"
+        accessibilityHint="Enter the name members will see"
       />
       <Input
         label="Description"
@@ -163,8 +176,9 @@ export default function CreateGroupScreen() {
         value={description}
         onChangeText={setDescription}
         multiline
-        numberOfLines={3}
         style={styles.multiline}
+        accessibilityLabel="Group description"
+        accessibilityHint="Optionally describe this group's purpose"
       />
       <Input
         label="Invite code"
@@ -173,6 +187,8 @@ export default function CreateGroupScreen() {
         onChangeText={setJoinCode}
         autoCapitalize="characters"
         autoCorrect={false}
+        accessibilityLabel="Invite code"
+        accessibilityHint="Enter the code members will use to find this group"
       />
       <Input
         label="Group password"
@@ -181,11 +197,29 @@ export default function CreateGroupScreen() {
         onChangeText={setSecret}
         secureTextEntry
         autoCapitalize="none"
+        accessibilityLabel="Group password"
+        accessibilityHint="Enter the password you will share privately with members"
       />
       {error && (
-        <Typography variant="caption" color="destructive" style={styles.error}>
-          {error}
-        </Typography>
+        <>
+          <Typography variant="caption" color="destructive" style={styles.error}>
+            {error} Check the details above and try again.
+          </Typography>
+          <Button
+            title="Try again"
+            variant="outline"
+            onPress={() => {
+              setError(null);
+              createGroup.mutate();
+            }}
+            loading={createGroup.isPending}
+            style={styles.retryButton}
+            accessibilityRole="button"
+            accessibilityLabel="Try creating the group again"
+            accessibilityHint="Retry group creation with the details you entered"
+            accessibilityState={{ busy: createGroup.isPending }}
+          />
+        </>
       )}
       <Button
         title="Create group"
@@ -196,6 +230,10 @@ export default function CreateGroupScreen() {
         loading={createGroup.isPending}
         disabled={!name.trim() || !joinCode.trim() || !secret}
         style={styles.button}
+        accessibilityRole="button"
+        accessibilityLabel="Create group"
+        accessibilityHint="Create the private group with the details you entered"
+        accessibilityState={{ disabled: !name.trim() || !joinCode.trim() || !secret, busy: createGroup.isPending }}
       />
     </ScrollView>
   );
@@ -207,6 +245,7 @@ const styles = StyleSheet.create({
   subtitle: { marginTop: 10, marginBottom: 24 },
   coverPicker: {
     height: 150,
+    minHeight: 44,
     borderWidth: 1,
     borderStyle: 'dashed',
     borderRadius: 12,
@@ -219,5 +258,6 @@ const styles = StyleSheet.create({
   coverNote: { marginBottom: 24 },
   multiline: { minHeight: 90, textAlignVertical: 'top' },
   error: { marginBottom: 14 },
+  retryButton: { marginBottom: 4, minHeight: 44 },
   button: { marginTop: 12 },
 });

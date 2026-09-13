@@ -15,7 +15,7 @@ export default function WelcomeScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 40 }]}>
-        <View style={styles.iconContainer}>
+        <View style={styles.iconContainer} accessibilityElementsHidden importantForAccessibility="no">
           <Feather name="sun" size={64} color={(colors as any).accent} />
         </View>
         <Typography variant="h1" align="center" style={styles.title}>
@@ -28,16 +28,22 @@ export default function WelcomeScreen() {
         <View style={styles.spacer} />
         
         <View style={styles.actions}>
-          <Button 
+          <Button
             title="Create an Account" 
             onPress={() => router.push('/sign-up')} 
             style={styles.button}
+            accessibilityRole="button"
+            accessibilityLabel="Create an account"
+            accessibilityHint="Opens account creation"
           />
-          <Button 
+          <Button
             title="Sign In" 
             variant="secondary"
             onPress={() => router.push('/sign-in')} 
             style={styles.button}
+            accessibilityRole="button"
+            accessibilityLabel="Sign in"
+            accessibilityHint="Opens sign in"
           />
         </View>
       </ScrollView>

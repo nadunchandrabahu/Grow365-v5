@@ -37,7 +37,7 @@ function entryTitle(entry: JournalListEntry): string {
 }
 
 function entryExcerpt(entry: JournalListEntry): string {
-  return entry.content.trim() || 'A quiet page waiting for your words.';
+  return entry.content.trim() || 'No text added yet.';
 }
 
 export default function JournalScreen() {
@@ -76,6 +76,7 @@ export default function JournalScreen() {
           ]}
           accessibilityRole="button"
           accessibilityLabel="Write a new journal entry"
+          accessibilityHint="Opens a blank private journal entry"
         >
           <Feather name="edit-3" size={20} color={colors.primaryForeground} />
         </Pressable>
@@ -108,6 +109,8 @@ export default function JournalScreen() {
             hitSlop={10}
             accessibilityRole="button"
             accessibilityLabel="Clear journal search"
+            accessibilityHint="Removes the current search text"
+            style={styles.clearSearchButton}
           >
             <Feather name="x" size={19} color={colors.mutedForeground} />
           </Pressable>
@@ -195,6 +198,7 @@ export default function JournalScreen() {
           onPress={() => router.push(`/journal/${item.id}`)}
           accessibilityRole="button"
           accessibilityLabel={`Edit ${entryTitle(item)}`}
+           accessibilityHint={`Opens the journal entry dated ${formatEntryDate(item.entry_date)}`}
         >
           <Card style={styles.entryCard}>
             <View style={styles.entryTopRow}>
@@ -218,7 +222,6 @@ export default function JournalScreen() {
             <Typography
               variant="journal"
               color="muted"
-              numberOfLines={3}
               style={styles.excerpt}
             >
               {entryExcerpt(item)}
@@ -231,7 +234,7 @@ export default function JournalScreen() {
                   </Typography>
                 )}
                 {item.devotionalTitle && (
-                  <Typography variant="caption" color="muted" numberOfLines={1}>
+                  <Typography variant="caption" color="muted">
                     From {item.devotionalTitle}
                   </Typography>
                 )}
@@ -258,21 +261,23 @@ const styles = StyleSheet.create({
   },
   headingRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 24,
   },
   headingCopy: {
     gap: 4,
+    flexShrink: 1,
   },
   newButton: {
-    width: 48,
-    height: 48,
+    minWidth: 44,
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
   search: {
-    minHeight: 50,
+    minHeight: 44,
     borderWidth: 1,
     paddingHorizontal: 15,
     flexDirection: 'row',
@@ -286,12 +291,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 12,
   },
+  clearSearchButton: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   entryCard: {
     padding: 20,
     marginBottom: 14,
   },
   entryTopRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 10,

@@ -103,6 +103,7 @@ export default function BookmarksScreen() {
     useState<ResolvedBookmark | null>(null);
   const [removeCandidate, setRemoveCandidate] =
     useState<ResolvedBookmark | null>(null);
+  const [removeError, setRemoveError] = useState<string | null>(null);
   const bookmarksQuery = useBookmarks(user?.id);
   const removeBookmark = useRemoveBookmark(user?.id);
   const savePassage = useSavePassageBookmark(user?.id);
@@ -127,6 +128,7 @@ export default function BookmarksScreen() {
   };
 
   const confirmRemove = (item: ResolvedBookmark): void => {
+    setRemoveError(null);
     setRemoveCandidate(item);
   };
 
@@ -150,6 +152,7 @@ export default function BookmarksScreen() {
           ]}
           accessibilityRole="button"
           accessibilityLabel="Save a Bible passage"
+          accessibilityHint="Opens a form for saving a Bible reference"
         >
           <Feather name="plus" size={18} color={colors.foreground} />
           <Typography variant="caption">Passage</Typography>
@@ -178,6 +181,8 @@ export default function BookmarksScreen() {
                 },
               ]}
               accessibilityRole="button"
+              accessibilityLabel={`Show ${option.label} bookmarks`}
+              accessibilityHint={selected ? 'Currently selected' : `Filters bookmarks to ${option.label.toLowerCase()}`}
               accessibilityState={{ selected }}
             >
               <Typography
@@ -288,6 +293,7 @@ export default function BookmarksScreen() {
             }
             accessibilityRole="button"
             accessibilityLabel={`Open ${item.title}`}
+            accessibilityHint={item.unavailable ? 'This saved item is no longer available' : 'Opens this saved item'}
           >
             <Card style={[styles.card, item.unavailable && styles.unavailable]}>
               <View
@@ -308,7 +314,7 @@ export default function BookmarksScreen() {
                 <Typography variant="reference" color="accent">
                   {KIND_LABELS[item.bookmark.kind].toUpperCase()}
                 </Typography>
-                <Typography variant="h3" numberOfLines={2}>
+                <Typography variant="h3">
                   {item.title}
                 </Typography>
                 {item.unavailable ? (
@@ -318,7 +324,7 @@ export default function BookmarksScreen() {
                 ) : (
                   <>
                     {item.excerpt && (
-                      <Typography variant="body" color="muted" numberOfLines={2}>
+                      <Typography variant="body" color="muted">
                         {item.excerpt}
                       </Typography>
                     )}
@@ -336,8 +342,10 @@ export default function BookmarksScreen() {
                   confirmRemove(item);
                 }}
                 hitSlop={10}
+                style={styles.removeButton}
                 accessibilityRole="button"
                 accessibilityLabel={`Remove ${item.title} from bookmarks`}
+                accessibilityHint="Opens a confirmation dialog"
               >
                 <Feather name="bookmark" size={21} color={colors.accent} />
               </Pressable>
@@ -375,6 +383,8 @@ export default function BookmarksScreen() {
                 hitSlop={10}
                 accessibilityRole="button"
                 accessibilityLabel="Close"
+                accessibilityHint="Closes the save passage form"
+                style={styles.modalCloseButton}
               >
                 <Feather name="x" size={22} color={colors.mutedForeground} />
               </Pressable>
@@ -420,7 +430,11 @@ export default function BookmarksScreen() {
               accessibilityLabel="Passage bookmark note"
             />
             {passageError && (
-              <Typography variant="caption" color="destructive">
+              <Typography
+                variant="caption"
+                color="destructive"
+                accessibilityRole="alert"
+              >
                 {passageError}
               </Typography>
             )}
@@ -481,6 +495,8 @@ export default function BookmarksScreen() {
                 hitSlop={10}
                 accessibilityRole="button"
                 accessibilityLabel="Close passage"
+                accessibilityHint="Closes the saved passage"
+                style={styles.modalCloseButton}
               >
                 <Feather name="x" size={22} color={colors.mutedForeground} />
               </Pressable>
@@ -488,7 +504,12 @@ export default function BookmarksScreen() {
             <Typography variant="reference" color="accent">
               {openedPassage?.bookmark.bible_ref}
             </Typography>
-            <Button title="Done" onPress={() => setOpenedPassage(null)} />
+            <Button
+              title="Done"
+              onPress={() => setOpenedPassage(null)}
+              accessibilityRole="button"
+              accessibilityLabel="Close saved passage"
+            />
           </View>
         </View>
       </Modal>
@@ -517,12 +538,22 @@ export default function BookmarksScreen() {
               “{removeCandidate?.title}” will no longer appear in your
               bookmarks.
             </Typography>
+            {removeError && (
+              <Typography variant="caption" color="destructive" accessibilityRole="alert">
+                {removeError}
+              </Typography>
+            )}
             <View style={styles.modalActions}>
               <Button
                 title="Keep"
                 variant="outline"
-                onPress={() => setRemoveCandidate(null)}
+                onPress={() => {
+                  setRemoveError(null);
+                  setRemoveCandidate(null);
+                }}
                 style={styles.modalAction}
+                accessibilityRole="button"
+                accessibilityLabel="Keep bookmark"
               />
               <Button
                 title="Remove"
@@ -530,10 +561,17 @@ export default function BookmarksScreen() {
                 onPress={() => {
                   if (!removeCandidate) return;
                   removeBookmark.mutate(removeCandidate.bookmark.id, {
-                    onSuccess: () => setRemoveCandidate(null),
+                    onSuccess: () => {
+                      setRemoveError(null);
+                      setRemoveCandidate(null);
+                    },
+                    onError: () =>
+                      setRemoveError('This bookmark could not be removed. Try again.'),
                   });
                 }}
                 style={styles.modalAction}
+                accessibilityRole="button"
+                accessibilityLabel="Remove bookmark"
               />
             </View>
           </View>
@@ -549,17 +587,20 @@ const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingHorizontal: 24 },
   headingRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
   },
-  title: { marginTop: 4 },
+  title: { marginTop: 4, flexShrink: 1 },
   addPassage: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
     paddingHorizontal: 12,
     paddingVertical: 9,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   intro: { marginTop: 8, maxWidth: 500 },
   filters: { gap: 8, paddingVertical: 22 },
@@ -567,6 +608,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 14,
     paddingVertical: 9,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   card: {
     flexDirection: 'row',
@@ -574,17 +617,31 @@ const styles = StyleSheet.create({
     gap: 14,
     padding: 16,
     marginBottom: 12,
+    minHeight: 96,
   },
   unavailable: { opacity: 0.62 },
   iconBox: {
     width: 58,
-    height: 68,
+    minHeight: 44,
+    alignSelf: 'stretch',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   cover: { width: '100%', height: '100%' },
-  cardCopy: { flex: 1, gap: 4 },
+  cardCopy: { flex: 1, minWidth: 0, gap: 4 },
+  removeButton: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCloseButton: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.45)',
@@ -598,13 +655,14 @@ const styles = StyleSheet.create({
   },
   modalHeading: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: 6,
   },
   modalInput: {
     borderWidth: 1,
-    minHeight: 48,
+    minHeight: 44,
     paddingHorizontal: 14,
     paddingVertical: 11,
     fontFamily: 'Inter_400Regular',
@@ -613,8 +671,9 @@ const styles = StyleSheet.create({
   },
   modalActions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
     marginTop: 6,
   },
-  modalAction: { flex: 1 },
+  modalAction: { flex: 1, minWidth: 120 },
 });

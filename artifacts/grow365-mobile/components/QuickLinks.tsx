@@ -35,9 +35,12 @@ export function QuickLinks() {
             key={link.id}
             activeOpacity={0.7}
             onPress={() => router.push(link.route)}
+            accessibilityRole="link"
+            accessibilityLabel={link.title}
+            accessibilityHint={`Opens ${link.title}`}
             style={[styles.linkBox, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}
           >
-            <Feather name={link.icon} size={24} color={colors.foreground} style={styles.icon} />
+            <Feather name={link.icon} size={24} color={colors.foreground} style={styles.icon} accessible={false} />
             <Typography variant="body" style={styles.linkTitle}>{link.title}</Typography>
           </TouchableOpacity>
         ))}
@@ -59,7 +62,10 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   linkBox: {
-    width: '47%',
+    flex: 1,
+    flexBasis: '45%',
+    minWidth: 44,
+    minHeight: 44,
     borderWidth: 1,
     padding: 20,
     alignItems: 'flex-start',
@@ -69,5 +75,6 @@ const styles = StyleSheet.create({
   },
   linkTitle: {
     fontFamily: 'Inter_500Medium',
+    flexShrink: 1,
   },
 });

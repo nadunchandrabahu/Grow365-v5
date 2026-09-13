@@ -22,7 +22,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useColors } from '@/hooks/useColors';
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile';
 import { authErrorMessage, validateName } from '@/lib/auth-errors';
-import { cancelDailyReminder, scheduleDailyReminder } from '@/lib/reminders';
+import {
+  cancelDailyReminder,
+  isValidReminderTime,
+  isValidTimezone,
+  scheduleDailyReminder,
+} from '@/lib/reminders';
 import { supabase } from '@/lib/supabase';
 import { cleanupUserDeviceData } from '@/lib/user-device-cleanup';
 
@@ -65,10 +70,6 @@ function useOwnedGroups(userId: string | undefined) {
 
 function isValidDate(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00`));
-}
-
-function isValidTime(value: string) {
-  return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
 }
 
 async function listAvatarObjectPaths(userId: string): Promise<string[]> {
@@ -170,7 +171,8 @@ export default function SettingsScreen() {
     const nameError = validateName(displayName);
     if (nameError) { setError(nameError); return; }
     if (!isValidDate(startDate)) { setError('Use a valid journey start date in YYYY-MM-DD format.'); return; }
-    if (!isValidTime(reminderTime)) { setError('Reminder time must use HH:MM (24-hour time).'); return; }
+    if (!isValidReminderTime(reminderTime)) { setError('Reminder time must use HH:MM (24-hour time).'); return; }
+    if (!isValidTimezone(timezone)) { setError('Choose a valid IANA timezone for your reminder.'); return; }
     setBusy(true); setError(undefined); setNotice(null);
     const previousReminder = {
       reminder_enabled: profileQuery.data.reminder_enabled,
@@ -343,22 +345,29 @@ export default function SettingsScreen() {
       <Button title="Save journey date" variant="outline" size="small" onPress={saveJourneyDate} />
 
       <SectionTitle>Notifications</SectionTitle>
-      <View style={[styles.settingRow, { borderBottomColor: colors.border }]}>
-        <View style={styles.settingText}><Typography variant="body">Daily devotional reminder</Typography><Typography variant="caption" color="muted">{Platform.OS === 'web' ? 'Web stores this preference; native reminders are available in the app.' : Platform.OS === 'android' ? 'A gentle reminder at this time. Android uses your device time; daylight-saving changes may require saving again.' : 'A gentle reminder at this time and timezone.'}</Typography></View>
-        <Switch value={reminderEnabled} onValueChange={setReminderEnabled} trackColor={{ true: colors.primary }} />
+       <View style={[styles.settingRow, { borderBottomColor: colors.border }]}>
+         <View style={styles.settingText}><Typography variant="body">Daily devotional reminder</Typography><Typography variant="caption" color="muted">{Platform.OS === 'web' ? 'Web stores this preference; native reminders are available in the app.' : Platform.OS === 'android' ? 'A gentle reminder at this time. Android recalculates when the app returns to the foreground; background DST changes cannot be guaranteed.' : 'A gentle reminder at this time and timezone.'}</Typography></View>
+         <Switch accessibilityLabel="Enable daily devotional reminder" value={reminderEnabled} onValueChange={setReminderEnabled} trackColor={{ true: colors.primary }} />
       </View>
       <Input label="Reminder time (HH:MM)" value={reminderTime} onChangeText={setReminderTime} placeholder="08:00" keyboardType="numbers-and-punctuation" />
       <View style={[styles.selector, { borderColor: colors.border, backgroundColor: colors.card }]}>
-        <Pressable style={styles.selectorButton} onPress={() => setTimezoneOpen((open) => !open)}><View><Typography variant="caption" color="muted">TIMEZONE</Typography><Typography variant="body">{timezone}</Typography></View><Feather name={timezoneOpen ? 'chevron-up' : 'chevron-down'} size={19} color={colors.mutedForeground} /></Pressable>
-        {timezoneOpen && <View style={[styles.timezoneList, { borderTopColor: colors.border }]}>{timezones.map((zone) => <Pressable key={zone} style={styles.timezoneOption} onPress={() => { setTimezone(zone); setTimezoneOpen(false); }}><Typography variant="body">{zone}</Typography>{zone === timezone && <Feather name="check" size={18} color={colors.primary} />}</Pressable>)}</View>}
+         <Pressable
+           style={styles.selectorButton}
+           onPress={() => setTimezoneOpen((open) => !open)}
+           accessibilityRole="button"
+           accessibilityLabel={`Timezone, ${timezone}`}
+           accessibilityHint="Shows the available timezones"
+           accessibilityState={{ expanded: timezoneOpen }}
+         ><View><Typography variant="caption" color="muted">TIMEZONE</Typography><Typography variant="body">{timezone}</Typography></View><Feather name={timezoneOpen ? 'chevron-up' : 'chevron-down'} size={19} color={colors.mutedForeground} /></Pressable>
+         {timezoneOpen && <View style={[styles.timezoneList, { borderTopColor: colors.border }]}>{timezones.map((zone) => <Pressable key={zone} style={styles.timezoneOption} onPress={() => { setTimezone(zone); setTimezoneOpen(false); }} accessibilityRole="radio" accessibilityLabel={zone} accessibilityState={{ selected: zone === timezone }}><Typography variant="body">{zone}</Typography>{zone === timezone && <Feather name="check" size={18} color={colors.primary} />}</Pressable>)}</View>}
       </View>
       {notice ? <Typography variant="body" color="success" style={styles.feedback}>{notice}</Typography> : null}
       {error ? <Typography variant="body" color="destructive" style={styles.feedback}>{error}</Typography> : null}
       <Button title="Save settings" loading={busy || updateProfile.isPending} onPress={() => void saveProfile()} style={styles.saveButton} />
 
       <SectionTitle>Legal</SectionTitle>
-      <Pressable style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={() => router.push('/privacy')}><Typography variant="body">Privacy policy</Typography><Feather name="chevron-right" size={18} color={colors.mutedForeground} /></Pressable>
-      <Pressable style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={() => router.push('/terms')}><Typography variant="body">Terms of use</Typography><Feather name="chevron-right" size={18} color={colors.mutedForeground} /></Pressable>
+      <Pressable style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={() => router.push('/privacy')} accessibilityRole="link" accessibilityLabel="Privacy policy"><Typography variant="body">Privacy policy</Typography><Feather name="chevron-right" size={18} color={colors.mutedForeground} /></Pressable>
+      <Pressable style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={() => router.push('/terms')} accessibilityRole="link" accessibilityLabel="Terms of use"><Typography variant="body">Terms of use</Typography><Feather name="chevron-right" size={18} color={colors.mutedForeground} /></Pressable>
       <View style={styles.version}><Typography variant="caption" color="muted">Grow365 version 1.0.0</Typography></View>
       <Button title="Sign out" variant="outline" loading={busy} onPress={() => void handleSignOut()} />
       <Button title="Delete my account" variant="ghost" onPress={() => { setDeleteText(''); setDeleteOpen(true); }} style={{ borderColor: colors.destructive }} />
@@ -386,23 +395,23 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 24, paddingBottom: 60 },
   sectionTitle: { marginTop: 25, marginBottom: 16 },
-  avatarRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 20 },
-  settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, paddingVertical: 14 },
+  avatarRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 16, marginBottom: 20 },
+  settingRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, paddingVertical: 14, gap: 12 },
   settingText: { flex: 1, paddingRight: 16, gap: 3 },
   selector: { borderWidth: 1, borderRadius: 10, overflow: 'hidden', marginBottom: 16 },
   selectorButton: { minHeight: 62, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  timezoneList: { borderTopWidth: 1, maxHeight: 240 },
-  timezoneOption: { padding: 14, flexDirection: 'row', justifyContent: 'space-between' },
+  timezoneList: { borderTopWidth: 1 },
+  timezoneOption: { minHeight: 44, padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   feedback: { marginTop: 14 },
   saveButton: { marginTop: 18 },
-  linkRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, borderBottomWidth: 1 },
+  linkRow: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, borderBottomWidth: 1 },
   version: { alignItems: 'center', paddingVertical: 18 },
   modalBackdrop: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: 'rgba(0,0,0,0.45)' },
   modalCard: { borderRadius: 16, padding: 22, maxHeight: '90%' },
   deleteScroll: { flexShrink: 1 },
   deleteScrollContent: { paddingBottom: 4 },
   modalBody: { marginTop: 12, lineHeight: 21 },
-  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 18 },
+  modalActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8, marginTop: 18 },
   transferBox: { marginTop: 18, gap: 10 },
   ownedGroup: { gap: 8, padding: 12, borderWidth: 1, borderRadius: 10 },
 });

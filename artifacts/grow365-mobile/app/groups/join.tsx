@@ -69,6 +69,8 @@ export default function JoinGroupScreen() {
         onChangeText={setCode}
         autoCapitalize="characters"
         autoCorrect={false}
+        accessibilityLabel="Invite code"
+        accessibilityHint="Enter the code from your group organizer"
       />
       <Input
         label="Group password"
@@ -77,14 +79,32 @@ export default function JoinGroupScreen() {
         onChangeText={setSecret}
         secureTextEntry
         autoCapitalize="none"
+        accessibilityLabel="Group password"
+        accessibilityHint="Enter the password from your group organizer"
       />
       <Typography variant="caption" color="muted" style={styles.rateNote}>
         Join attempts are limited to 5 in 15 minutes.
       </Typography>
       {error && (
-        <Typography variant="caption" color="destructive" style={styles.error}>
-          {error}
-        </Typography>
+        <>
+          <Typography variant="caption" color="destructive" style={styles.error}>
+            {error}
+          </Typography>
+          <Button
+            title="Try again"
+            variant="outline"
+            onPress={() => {
+              setError(null);
+              joinGroup.mutate();
+            }}
+            loading={joinGroup.isPending}
+            style={styles.retryButton}
+            accessibilityRole="button"
+            accessibilityLabel="Try joining the group again"
+            accessibilityHint="Retry with the invite code and password you entered"
+            accessibilityState={{ busy: joinGroup.isPending }}
+          />
+        </>
       )}
       <View style={styles.spacer} />
       <Button
@@ -95,6 +115,10 @@ export default function JoinGroupScreen() {
         }}
         loading={joinGroup.isPending}
         disabled={!code.trim() || !secret}
+        accessibilityRole="button"
+        accessibilityLabel="Join group"
+        accessibilityHint="Use the invite code and password to join this group"
+        accessibilityState={{ disabled: !code.trim() || !secret, busy: joinGroup.isPending }}
       />
     </ScrollView>
   );
@@ -106,5 +130,6 @@ const styles = StyleSheet.create({
   subtitle: { marginTop: 10, marginBottom: 30 },
   rateNote: { marginTop: -4, marginBottom: 12 },
   error: { marginBottom: 12 },
+  retryButton: { marginBottom: 4, minHeight: 44 },
   spacer: { flex: 1, minHeight: 40 },
 });

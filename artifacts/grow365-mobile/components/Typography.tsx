@@ -1,6 +1,9 @@
 import React from 'react';
-import { Text, TextProps } from 'react-native';
+import { PixelRatio, Text, TextProps } from 'react-native';
 import { useColors } from '@/hooks/useColors';
+
+/** Keep accessibility font scaling enabled without allowing text to overflow every layout. */
+export const MAX_FONT_SIZE_MULTIPLIER = 2;
 
 interface TypographyProps extends TextProps {
   variant?: 'h1' | 'h2' | 'h3' | 'body' | 'journal' | 'caption' | 'reference';
@@ -16,6 +19,7 @@ export function Typography({
   ...props
 }: TypographyProps) {
   const colors = useColors();
+  const fontScale = Math.min(PixelRatio.getFontScale(), MAX_FONT_SIZE_MULTIPLIER);
 
   let fontFamily = 'Inter_400Regular';
   let fontSize = 17;
@@ -72,13 +76,15 @@ export function Typography({
         {
           fontFamily,
           fontSize,
-          lineHeight,
+          lineHeight: lineHeight * fontScale,
           color: textColor,
           textAlign: align,
         },
         style,
       ]}
       {...props}
+      allowFontScaling
+      maxFontSizeMultiplier={MAX_FONT_SIZE_MULTIPLIER}
     />
   );
 }

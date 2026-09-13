@@ -38,18 +38,24 @@ export function GroupCover({ path, userId, style }: GroupCoverProps) {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.secondary }, style]}>
+    <View
+      style={[styles.container, { backgroundColor: colors.secondary }, style]}
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel="Group cover image"
+    >
       {coverUrl ? (
         <Image
           source={{ uri: coverUrl }}
           style={styles.image}
           resizeMode="cover"
           onError={handleImageError}
+          accessible={false}
         />
       ) : (
         <View style={styles.fallback}>
-          <Feather name="users" size={24} color={colors.mutedForeground} />
-          <Typography variant="caption" color="muted">
+          <Feather name="users" size={24} color={colors.mutedForeground} accessible={false} />
+          <Typography variant="caption" color="muted" accessible={false}>
             Group cover
           </Typography>
         </View>

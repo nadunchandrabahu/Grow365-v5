@@ -23,16 +23,21 @@ export function useTodayDevotional(
   userId: string | undefined,
   timezone: string | undefined,
 ) {
-  const localDate = timezone ? dateInTimezone(timezone) : undefined;
-
   return useQuery({
-    queryKey: ['today-devotional', userId, localDate],
-    enabled: Boolean(userId && localDate),
+    queryKey: ['today-devotional', userId, timezone],
+    enabled: Boolean(userId && timezone),
     queryFn: async (): Promise<Devotional | null> => {
+      if (!timezone) throw new Error('Your timezone is missing.');
+      let localDate: string;
+      try {
+        localDate = dateInTimezone(timezone);
+      } catch {
+        throw new Error('Your saved timezone is not valid.');
+      }
       const { data, error } = await supabase
         .from('devotionals')
         .select('*, devotional_series(*)')
-        .eq('publish_date', localDate!)
+        .eq('publish_date', localDate)
         .eq('status', 'published')
         .maybeSingle();
       if (error) throw error;

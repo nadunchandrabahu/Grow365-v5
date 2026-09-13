@@ -485,7 +485,14 @@ export default function JournalEditorScreen() {
             </Typography>
           </View>
           {saveStatus === 'local' && hasMeaningfulContent(draft) && (
-            <Pressable onPress={() => void saveNow()} hitSlop={10}>
+            <Pressable
+              onPress={() => void saveNow()}
+              hitSlop={10}
+              style={styles.tryNowButton}
+              accessibilityRole="button"
+              accessibilityLabel="Retry saving this entry"
+              accessibilityHint="Tries to sync your saved entry"
+            >
               <Typography variant="caption" color="accent">
                 Try now
               </Typography>
@@ -494,7 +501,7 @@ export default function JournalEditorScreen() {
         </View>
 
         {saveError && (
-          <Typography variant="caption" color="destructive" style={styles.error}>
+          <Typography variant="caption" color="destructive" style={styles.error} accessibilityRole="alert">
             {saveError}
           </Typography>
         )}
@@ -572,6 +579,8 @@ export default function JournalEditorScreen() {
                   },
                 ]}
                 accessibilityRole="button"
+                accessibilityLabel={`${selected ? 'Remove' : 'Select'} rhythm ${section}`}
+                accessibilityHint={selected ? 'Clears this rhythm' : 'Adds this rhythm to the entry'}
                 accessibilityState={{ selected }}
               >
                 <Typography
@@ -600,16 +609,29 @@ export default function JournalEditorScreen() {
               <Typography variant="caption" color="muted">
                 DEVOTIONAL
               </Typography>
-              <Typography variant="body" numberOfLines={1}>
+              <Typography variant="body">
                 {devotionalQuery.data?.title ??
                   (devotionalQuery.isError ? 'Reading unavailable' : 'Loading…')}
               </Typography>
+              {devotionalQuery.isError ? (
+                <Pressable
+                  onPress={() => void devotionalQuery.refetch()}
+                  style={styles.retryDevotionalButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Try loading the linked devotional again"
+                  accessibilityHint="Retries the linked devotional request"
+                >
+                  <Typography variant="caption" color="accent">Try again</Typography>
+                </Pressable>
+              ) : null}
             </View>
             <Pressable
               onPress={() => changeDraft({ devotionalId: null })}
               hitSlop={10}
+              style={styles.removeDevotionalButton}
               accessibilityRole="button"
               accessibilityLabel="Remove linked devotional"
+              accessibilityHint="Removes the devotional link from this entry"
             >
               <Feather name="x" size={20} color={colors.mutedForeground} />
             </Pressable>
@@ -652,6 +674,7 @@ export default function JournalEditorScreen() {
             ]}
             accessibilityRole="button"
             accessibilityLabel="Delete journal entry"
+            accessibilityHint="Permanently deletes this private entry"
           >
             <Feather name="trash-2" size={17} color={colors.destructive} />
             <Typography variant="caption" color="destructive">
@@ -677,6 +700,7 @@ const styles = StyleSheet.create({
   statusRow: {
     minHeight: 30,
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 10,
@@ -685,6 +709,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
+    flexShrink: 1,
   },
   error: {
     marginBottom: 8,
@@ -698,11 +723,13 @@ const styles = StyleSheet.create({
   },
   metadataRow: {
     flexDirection: Platform.OS === 'web' ? 'row' : 'column',
+    flexWrap: 'wrap',
     gap: 16,
     marginBottom: 20,
   },
   metadataField: {
     flex: 1,
+    minWidth: 220,
     gap: 4,
   },
   metadataInput: {
@@ -724,9 +751,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 8,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   devotionalContext: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: 12,
     padding: 14,
@@ -734,6 +764,18 @@ const styles = StyleSheet.create({
   },
   devotionalCopy: {
     flex: 1,
+    minWidth: 0,
+  },
+  retryDevotionalButton: {
+    alignSelf: 'flex-start',
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  removeDevotionalButton: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   paper: {
     borderWidth: 1,
@@ -755,5 +797,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    minHeight: 44,
+  },
+  tryNowButton: {
+    minHeight: 44,
+    justifyContent: 'center',
   },
 });

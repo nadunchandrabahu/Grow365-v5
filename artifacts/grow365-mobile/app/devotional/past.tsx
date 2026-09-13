@@ -13,7 +13,7 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
-import { ErrorState, LoadingState } from '@/components/State';
+import { EmptyState, ErrorState, LoadingState } from '@/components/State';
 import { Typography } from '@/components/Typography';
 import { useAuth } from '@/contexts/AuthContext';
 import { useColors } from '@/hooks/useColors';
@@ -81,6 +81,8 @@ function ArchiveInvitation() {
     <ScrollView
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={styles.invitation}
+      accessible
+      accessibilityLabel="Supporter archive information"
     >
       <View style={styles.previewGrid} accessibilityElementsHidden>
         {Array.from({ length: 15 }, (_, index) => (
@@ -132,7 +134,7 @@ function ArchiveInvitation() {
         </Typography>
         <View style={[styles.freePromise, { borderTopColor: colors.border }]}>
           <Feather name="heart" size={18} color={colors.accent} />
-          <Typography variant="body">
+          <Typography variant="body" style={{ flex: 1, minWidth: 0 }}>
             Today’s devotional and your complete private journal always remain
             free.
           </Typography>
@@ -141,6 +143,9 @@ function ArchiveInvitation() {
           title="View Subscription Information"
           onPress={() => router.push('/subscription')}
           style={styles.paywallButton}
+          accessibilityRole="button"
+          accessibilityLabel="View subscription information"
+          accessibilityHint="Opens information about supporter access"
         />
       </View>
     </ScrollView>
@@ -224,6 +229,20 @@ export default function PastDevotionalsScreen() {
     );
   }
 
+  if (archiveQuery.data.devotionals.length === 0) {
+    return (
+      <View style={[styles.state, { backgroundColor: colors.background }]}>
+        <EmptyState
+          icon="archive"
+          title="No published readings yet"
+          description="Published readings will appear here as your archive becomes available."
+          actionLabel="Try Again"
+          onAction={() => void archiveQuery.refetch()}
+        />
+      </View>
+    );
+  }
+
   const currentDay = archiveQuery.data.currentDay;
   const series = archiveQuery.data.series;
 
@@ -281,6 +300,8 @@ export default function PastDevotionalsScreen() {
                     },
                   ]}
                   accessibilityRole="button"
+                  accessibilityLabel={`Filter archive by ${item.name}`}
+                  accessibilityHint={selected ? 'Currently selected' : `Shows readings from ${item.name}`}
                   accessibilityState={{ selected }}
                 >
                   <Typography
@@ -333,6 +354,13 @@ export default function PastDevotionalsScreen() {
             disabled={!canOpen}
             accessibilityRole={canOpen ? 'link' : 'text'}
             accessibilityLabel={label}
+            accessibilityHint={
+              canOpen
+                ? 'Opens this devotional reading'
+                : isFuture
+                  ? 'This day is not available to open yet'
+                  : 'No published reading is available for this day'
+            }
           >
             <View
               style={[
@@ -393,8 +421,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 14,
     paddingVertical: 9,
+    minHeight: 44,
+    justifyContent: 'center',
   },
-  legend: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  legend: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   legendMark: { width: 14, height: 14, borderWidth: 2, borderRadius: 3 },
   dayRow: { gap: 7 },
   dayCellWrapper: { marginBottom: 7 },
@@ -434,7 +464,8 @@ const styles = StyleSheet.create({
   },
   previewCell: {
     width: 54,
-    height: 70,
+    minHeight: 44,
+    aspectRatio: 54 / 70,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -447,13 +478,15 @@ const styles = StyleSheet.create({
   },
   archiveIcon: {
     width: 58,
-    height: 58,
+    minHeight: 44,
+    padding: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   freePromise: {
     borderTopWidth: 1,
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
     paddingTop: 18,
     marginTop: 4,

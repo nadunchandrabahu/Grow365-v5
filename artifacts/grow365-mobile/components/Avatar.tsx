@@ -40,6 +40,9 @@ export function Avatar({ path, name, size = 80, style }: AvatarProps) {
         { width: size, height: size, borderRadius: size / 2, backgroundColor: colors.secondary },
         style,
       ]}
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={name ? `Profile photo of ${name}` : 'Profile avatar'}
     >
       {url && !failed ? (
         <Image
@@ -47,13 +50,14 @@ export function Avatar({ path, name, size = 80, style }: AvatarProps) {
           style={{ width: size, height: size, borderRadius: size / 2 }}
           resizeMode="cover"
           onError={() => setFailed(true)}
+          accessible={false}
         />
       ) : (
         <>
-          <Typography variant={size >= 64 ? 'h1' : 'h3'} style={{ color: colors.secondaryForeground }}>
+          <Typography variant={size >= 64 ? 'h1' : 'h3'} style={{ color: colors.secondaryForeground }} accessible={false}>
             {initial}
           </Typography>
-          {!name && <Feather name="user" size={Math.max(14, size / 4)} color={colors.secondaryForeground} />}
+          {!name && <Feather name="user" size={Math.max(14, size / 4)} color={colors.secondaryForeground} accessible={false} />}
         </>
       )}
     </View>

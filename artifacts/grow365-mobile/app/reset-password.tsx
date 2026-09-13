@@ -33,7 +33,12 @@ export default function ResetPasswordScreen() {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+      accessibilityLabel="Reset password"
+    >
       {!sent ? (
         <>
           <Typography variant="body" color="muted" style={styles.subtitle}>
@@ -46,6 +51,8 @@ export default function ResetPasswordScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}
+          accessibilityLabel="Email address"
+          accessibilityHint="Enter the email address associated with your account"
             onChangeText={(value) => {
               setEmail(value);
               setError(undefined);
@@ -54,15 +61,15 @@ export default function ResetPasswordScreen() {
           />
           
           <View style={styles.spacer} />
-          <Button title="Send Reset Link" onPress={() => void handleReset()} loading={submitting} />
+          <Button title="Send Reset Link" onPress={() => void handleReset()} loading={submitting} accessibilityRole="button" accessibilityLabel="Send password reset link" />
         </>
       ) : (
         <View style={styles.successContainer}>
-          <Typography variant="h2" align="center" style={styles.title}>Check your email</Typography>
+          <Typography variant="h2" align="center" style={styles.title} accessibilityRole="header">Check your email</Typography>
           <Typography variant="body" color="muted" align="center" style={styles.subtitle}>
             We've sent password reset instructions to {email || 'your email address'}.
           </Typography>
-          <Button title="Back to Sign In" variant="outline" onPress={() => router.back()} style={{ width: '100%' }} />
+          <Button title="Back to Sign In" variant="outline" onPress={() => router.back()} style={{ width: '100%' }} accessibilityRole="button" accessibilityLabel="Back to sign in" />
         </View>
       )}
     </ScrollView>

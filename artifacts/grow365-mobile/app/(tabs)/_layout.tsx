@@ -50,6 +50,7 @@ function ClassicTabLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         headerShown: false,
+        tabBarItemStyle: { minHeight: 44 },
         tabBarStyle: {
           position: 'absolute',
           backgroundColor: isIOS ? 'transparent' : colors.background,
@@ -80,6 +81,7 @@ function ClassicTabLayout() {
         name="index"
         options={{
           title: 'Home',
+          tabBarAccessibilityLabel: 'Home tab',
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="house" tintColor={color} size={24} />
@@ -92,6 +94,7 @@ function ClassicTabLayout() {
         name="study"
         options={{
           title: 'Study',
+          tabBarAccessibilityLabel: 'Study tab',
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="book" tintColor={color} size={24} />
@@ -104,6 +107,7 @@ function ClassicTabLayout() {
         name="journal"
         options={{
           title: 'Journal',
+          tabBarAccessibilityLabel: 'Journal tab',
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="square.and.pencil" tintColor={color} size={24} />
@@ -116,6 +120,7 @@ function ClassicTabLayout() {
         name="bookmarks"
         options={{
           title: 'Bookmarks',
+          tabBarAccessibilityLabel: 'Bookmarks tab',
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="bookmark" tintColor={color} size={24} />
@@ -128,6 +133,7 @@ function ClassicTabLayout() {
         name="profile"
         options={{
           title: 'Profile',
+          tabBarAccessibilityLabel: 'Profile tab',
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="person" tintColor={color} size={24} />

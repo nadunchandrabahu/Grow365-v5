@@ -1,7 +1,9 @@
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EmptyState, ErrorState, LoadingState } from '@/components/State';
+import { Button } from '@/components/Button';
 import { Typography } from '@/components/Typography';
 import { useAuth } from '@/contexts/AuthContext';
 import { useColors } from '@/hooks/useColors';
@@ -39,6 +41,7 @@ function formatToday(timeZone: string): string {
 
 export default function HomeScreen() {
   const colors = useColors();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   
@@ -67,12 +70,18 @@ export default function HomeScreen() {
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ErrorState
           title="Couldn't load today"
-          description="Check your connection and try again."
+          description="Check your connection and try again. If this continues, review your timezone in Settings."
           onRetry={() => {
             void profileQuery.refetch();
             void devotionalQuery.refetch();
             void ribbonQuery.refetch();
           }}
+        />
+        <Button
+          title="Open settings"
+          variant="outline"
+          onPress={() => router.push('/settings')}
+          style={styles.errorAction}
         />
       </View>
     );
@@ -104,7 +113,7 @@ export default function HomeScreen() {
           { paddingTop: insets.top + 20, paddingBottom: 120 },
         ]}
       >
-        <View style={styles.header}>
+        <View style={styles.header} accessible accessibilityRole="header">
           <Typography variant="reference" color="accent" style={styles.date}>
             {formatToday(profileQuery.data.timezone).toUpperCase()}
           </Typography>
@@ -138,7 +147,28 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {partialReading && (
+        {partialReadingQuery.isLoading ? (
+          <Typography variant="caption" color="muted" style={styles.resumeStatus}>
+            Checking your reading progress…
+          </Typography>
+        ) : partialReadingQuery.isError ? (
+          <View style={styles.resumeStatus}>
+            <Typography variant="caption" color="destructive" accessibilityRole="alert">
+              Your saved reading progress is unavailable.
+            </Typography>
+            <Pressable
+              onPress={() => void partialReadingQuery.refetch()}
+              style={styles.retryButton}
+              accessibilityRole="button"
+              accessibilityLabel="Retry reading progress"
+              accessibilityHint="Checks for your saved reading progress again"
+            >
+              <Typography variant="caption" color="accent" style={styles.retryText}>
+                Try again
+              </Typography>
+            </Pressable>
+          </View>
+        ) : partialReading ? (
           <View style={styles.resumeContainer}>
             <ResumeRow
               devotionalId={partialReading.devotional_id}
@@ -147,7 +177,7 @@ export default function HomeScreen() {
               scrollPct={partialReading.scroll_pct}
             />
           </View>
-        )}
+        ) : null}
 
         <View style={styles.linksContainer}>
           <QuickLinks />
@@ -175,6 +205,10 @@ const styles = StyleSheet.create({
   container: { 
     flex: 1 
   },
+  errorAction: {
+    alignSelf: 'center',
+    marginTop: 12,
+  },
   content: { 
     // minimal vertical padding, handled mostly by insets
   },
@@ -192,6 +226,18 @@ const styles = StyleSheet.create({
   journeyDay: { marginBottom: 0 },
   resumeContainer: {
     paddingHorizontal: 24,
+  },
+  resumeStatus: {
+    paddingHorizontal: 24,
+    marginBottom: 18,
+  },
+  retryButton: {
+    minHeight: 44,
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+  },
+  retryText: {
+    textDecorationLine: 'underline',
   },
   cardContainer: {
     paddingHorizontal: 24,

@@ -43,6 +43,9 @@ export function RecentActivity({ activities }: Props) {
             key={item.id}
             activeOpacity={0.7}
             onPress={() => router.push(`/groups/${item.groupId}`)}
+            accessibilityRole="link"
+            accessibilityLabel={`${item.authorName} in ${item.groupName}: ${item.title} — ${item.preview}`}
+            accessibilityHint="Opens this group activity"
             style={[
               styles.activityItem,
               { 
@@ -56,14 +59,15 @@ export function RecentActivity({ activities }: Props) {
                 name={item.type === 'note' ? 'file-text' : 'help-circle'} 
                 size={18} 
                 color={colors.mutedForeground} 
+                accessible={false}
               />
             </View>
             <View style={styles.activityContent}>
               <View style={styles.header}>
                 <Typography variant="caption" style={styles.author}>{item.authorName}</Typography>
-                <Typography variant="reference" color="muted">{item.groupName}</Typography>
+                <Typography variant="reference" color="muted" style={styles.groupName}>{item.groupName}</Typography>
               </View>
-              <Typography variant="body" style={styles.preview} numberOfLines={2}>
+              <Typography variant="body">
                 {item.title} — {item.preview}
               </Typography>
             </View>
@@ -86,6 +90,7 @@ const styles = StyleSheet.create({
   },
   activityItem: {
     flexDirection: 'row',
+    minHeight: 44,
     paddingVertical: 16,
     alignItems: 'flex-start',
   },
@@ -101,14 +106,16 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 4,
   },
   author: {
     fontFamily: 'Inter_600SemiBold',
+    flexShrink: 1,
   },
-  preview: {
-    lineHeight: 22,
+  groupName: {
+    flexShrink: 1,
   },
 });

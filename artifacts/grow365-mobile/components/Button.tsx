@@ -17,6 +17,10 @@ export function Button({
   loading,
   style,
   disabled,
+  accessibilityRole,
+  accessibilityLabel,
+  accessibilityHint,
+  accessibilityState,
   ...props
 }: ButtonProps) {
   const colors = useColors();
@@ -75,6 +79,17 @@ export function Button({
       disabled={disabled || loading}
       activeOpacity={0.8}
       {...props}
+      accessibilityRole={accessibilityRole ?? 'button'}
+      accessibilityLabel={accessibilityLabel ?? title}
+      accessibilityHint={
+        accessibilityHint ??
+        (loading ? 'Please wait' : 'Activates this button')
+      }
+      accessibilityState={{
+        ...accessibilityState,
+        disabled: disabled || loading,
+        busy: loading || undefined,
+      }}
     >
       {loading ? (
         <ActivityIndicator color={textColor} />
@@ -99,5 +114,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    minWidth: 44,
+    minHeight: 44,
   },
 });
