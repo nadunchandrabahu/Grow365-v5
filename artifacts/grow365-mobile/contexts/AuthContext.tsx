@@ -26,6 +26,7 @@ interface AuthContextValue {
   signOut: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
+  updateEmail: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -143,6 +144,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     if (error) throw error;
   }, []);
 
+  const updateEmail = useCallback(async (email: string): Promise<void> => {
+    const { error } = await supabase.auth.updateUser({ email: email.trim() });
+    if (error) throw error;
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
@@ -153,8 +159,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
       signOut,
       sendPasswordReset,
       updatePassword,
+      updateEmail,
     }),
-    [loading, sendPasswordReset, session, signIn, signOut, signUp, updatePassword],
+    [loading, sendPasswordReset, session, signIn, signOut, signUp, updateEmail, updatePassword],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

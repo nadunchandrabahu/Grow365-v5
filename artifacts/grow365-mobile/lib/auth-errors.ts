@@ -33,6 +33,9 @@ export function validateName(name: string): string | undefined {
 }
 
 export function authErrorMessage(error: unknown): string {
+  if (error instanceof Error && !(error instanceof AuthError)) {
+    return error.message || 'We could not complete that request. Check your connection and try again.';
+  }
   if (!(error instanceof AuthError)) {
     return 'We could not complete that request. Check your connection and try again.';
   }

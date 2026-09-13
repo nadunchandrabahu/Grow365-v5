@@ -319,7 +319,7 @@ export default function GroupScreen() {
     <View key={reply.id} style={[styles.reply, { marginLeft: Math.min(depth, 3) * 14 }]}>
       <View style={styles.replyHeader}>
         <Typography variant="caption" color="muted">
-          {reply.profiles?.display_name ?? 'Group member'}
+          {reply.profiles?.display_name ?? 'Former member'}
         </Typography>
         <Pressable disabled={Boolean(pendingAction)} onPress={() => setReplyParent((current) => ({ ...current, [reply.question_id]: reply.id }))}>
           <Typography variant="caption" color="accent">Reply</Typography>
@@ -418,7 +418,7 @@ export default function GroupScreen() {
   const noteCard = (note: (typeof notes)[number]) => (
     <Card key={note.id} style={styles.card}>
       <View style={styles.cardHeader}>
-        <View style={styles.cardTitle}><Typography variant="h3">{note.title ?? 'Shared note'}</Typography><Typography variant="caption" color="muted">{note.profiles?.display_name ?? 'Group member'} · {note.visibility === 'private' ? 'Private' : 'Group'}</Typography></View>
+        <View style={styles.cardTitle}><Typography variant="h3">{note.title ?? 'Shared note'}</Typography><Typography variant="caption" color="muted">{note.profiles?.display_name ?? 'Former member'} · {note.visibility === 'private' ? 'Private' : 'Group'}</Typography></View>
         <GroupBookmarkButton disabled={Boolean(pendingAction)} target={{ kind: 'note', targetId: note.id, label: note.title ?? 'Group note' }} />
       </View>
       {note.bible_ref && <Typography variant="reference" color="accent">{note.bible_ref}</Typography>}
@@ -430,7 +430,7 @@ export default function GroupScreen() {
 
   const questionCard = (question: (typeof questions)[number]) => (
     <Card key={question.id} style={styles.card}>
-      <View style={styles.cardHeader}><View style={styles.cardTitle}><Typography variant="h3">{question.title}</Typography><Typography variant="caption" color="muted">{question.profiles?.display_name ?? 'Group member'} · {question.is_resolved ? 'Resolved' : 'Open'}</Typography></View><GroupBookmarkButton disabled={Boolean(pendingAction)} target={{ kind: 'question', targetId: question.id, label: question.title }} /></View>
+      <View style={styles.cardHeader}><View style={styles.cardTitle}><Typography variant="h3">{question.title}</Typography><Typography variant="caption" color="muted">{question.profiles?.display_name ?? 'Former member'} · {question.is_resolved ? 'Resolved' : 'Open'}</Typography></View><GroupBookmarkButton disabled={Boolean(pendingAction)} target={{ kind: 'question', targetId: question.id, label: question.title }} /></View>
       {question.bible_ref && <Typography variant="reference" color="accent">{question.bible_ref}</Typography>}
       {question.devotional_id && devotionalById.get(question.devotional_id) && <Typography variant="caption" color="muted">Day {devotionalById.get(question.devotional_id)?.day_of_year} · {devotionalById.get(question.devotional_id)?.title}</Typography>}
       {question.body && <Typography variant="body" style={styles.body}>{question.body}</Typography>}
@@ -467,9 +467,9 @@ export default function GroupScreen() {
     const isOwner = member.user_id === group.owner_id;
     return (
       <Card key={member.user_id} style={styles.member}>
-        <View style={styles.avatar}><Typography variant="h3">{(member.profiles?.display_name ?? '?').slice(0, 1).toUpperCase()}</Typography></View>
+          <View style={styles.avatar}><Typography variant="h3">{(member.profiles?.display_name ?? 'Former member').slice(0, 1).toUpperCase()}</Typography></View>
         <View style={styles.memberDetails}>
-          <Typography variant="body">{member.profiles?.display_name ?? 'Group member'}</Typography>
+          <Typography variant="body">{member.profiles?.display_name ?? 'Former member'}</Typography>
           <Typography variant="caption" color="muted">{member.role}</Typography>
           {isOwner ? <Typography variant="caption" color="muted">Owner role cannot be changed</Typography> : (
             <View style={styles.memberActions}>

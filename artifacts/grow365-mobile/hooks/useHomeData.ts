@@ -169,6 +169,7 @@ export function useRecentGroupActivity(userId: string | undefined) {
           content,
           created_at,
           updated_at,
+           author_id,
           groups (id, name),
           profiles (id, display_name)
         `)
@@ -186,6 +187,7 @@ export function useRecentGroupActivity(userId: string | undefined) {
           body,
           created_at,
           updated_at,
+           author_id,
           groups (id, name),
           profiles (id, display_name)
         `)
@@ -197,7 +199,7 @@ export function useRecentGroupActivity(userId: string | undefined) {
       const items: RecentActivityItem[] = [];
       
       for (const n of notes || []) {
-        if (!n.groups || Array.isArray(n.groups) || !n.profiles || Array.isArray(n.profiles)) continue;
+        if (!n.groups || Array.isArray(n.groups)) continue;
         items.push({
           id: `note-${n.id}`,
           type: 'note',
@@ -206,13 +208,13 @@ export function useRecentGroupActivity(userId: string | undefined) {
           activityAt: n.updated_at || n.created_at,
           groupId: n.groups.id,
           groupName: n.groups.name,
-          authorId: n.profiles.id,
-          authorName: n.profiles.display_name,
+          authorId: n.profiles && !Array.isArray(n.profiles) ? n.profiles.id : n.author_id ?? '',
+          authorName: n.profiles && !Array.isArray(n.profiles) ? n.profiles.display_name : 'Former member',
         });
       }
       
       for (const q of questions || []) {
-        if (!q.groups || Array.isArray(q.groups) || !q.profiles || Array.isArray(q.profiles)) continue;
+        if (!q.groups || Array.isArray(q.groups)) continue;
         items.push({
           id: `question-${q.id}`,
           type: 'question',
@@ -221,8 +223,8 @@ export function useRecentGroupActivity(userId: string | undefined) {
           activityAt: q.updated_at || q.created_at,
           groupId: q.groups.id,
           groupName: q.groups.name,
-          authorId: q.profiles.id,
-          authorName: q.profiles.display_name,
+          authorId: q.profiles && !Array.isArray(q.profiles) ? q.profiles.id : q.author_id ?? '',
+          authorName: q.profiles && !Array.isArray(q.profiles) ? q.profiles.display_name : 'Former member',
         });
       }
       

@@ -2,3 +2,4 @@
 - [Journal privacy enforcement](journal-privacy-enforcement.md) — journal CRUD and search are server-scoped to auth.uid; preserve both server and client privacy guards.
 - [Devotional entitlement caching](devotional-entitlement-caching.md) — protected devotional metadata must never survive account or entitlement changes through local/query caches.
 - [Group study authority](group-study-authority.md) — group passwords and join throttling stay inside RPCs; content and moderation authorization stays in database RLS.
+- [Account deletion lifecycle](account-deletion-lifecycle.md) — deletion blocks group owners, preserves discussion text as Former member, and purges private database, Storage, and device data.

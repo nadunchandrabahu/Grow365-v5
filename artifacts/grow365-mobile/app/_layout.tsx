@@ -98,6 +98,8 @@ function RootLayoutNav() {
       <Stack.Screen name="groups/[id]" options={{ title: 'Group' }} />
       <Stack.Screen name="subscription" options={{ title: 'Subscription' }} />
       <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+      <Stack.Screen name="privacy" options={{ title: 'Privacy policy' }} />
+      <Stack.Screen name="terms" options={{ title: 'Terms of use' }} />
     </Stack>
   );
 }

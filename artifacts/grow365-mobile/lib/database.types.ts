@@ -860,6 +860,7 @@ export type Database = {
         Returns: string
       }
       current_journey_day: { Args: { uid?: string }; Returns: number }
+      delete_my_account: { Args: never; Returns: undefined }
       get_group_join_code: { Args: { gid: string }; Returns: string }
       has_active_subscription: { Args: { uid?: string }; Returns: boolean }
       is_app_admin: { Args: { uid?: string }; Returns: boolean }
@@ -875,6 +876,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      transfer_group_ownership: {
+        Args: { p_group_id: string; p_new_owner_id: string }
+        Returns: undefined
       }
       publish_scheduled_devotionals: { Args: never; Returns: number }
       search_journal_entries: {

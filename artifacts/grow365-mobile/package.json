@@ -60,6 +60,7 @@
     "zod-validation-error": "^3.4.0"
   },
   "dependencies": {
+    "expo-notifications": "~57.0.18",
     "react-native-webview": "13.16.1"
   }
 }
