@@ -8,3 +8,9 @@ Group creation and joining must use the database RPCs. The app must never read o
 **Why:** The join RPC hashes and verifies passwords server-side, records attempts, and rate-limits repeated failures. RLS already encodes private-note visibility, membership access, author editing, and owner/admin moderation.
 
 **How to apply:** Send join credentials only as RPC arguments, map structured join errors to honest UI, select explicit safe group columns, and do not add client role checks that can drift from database policy.
+
+Group covers use the private `group-covers` bucket. Object paths start with the group UUID; live Storage policies allow group-member reads and owner/admin writes through the existing membership helpers.
+
+**Why:** Private signed URLs prevent group artwork from becoming public while preserving the same database-defined membership boundary as group content.
+
+**How to apply:** Store only the object path in `groups.cover_path`, generate user-scoped short-lived signed URLs, verify the path update returned a row, and clean up orphaned uploads after partial failures.

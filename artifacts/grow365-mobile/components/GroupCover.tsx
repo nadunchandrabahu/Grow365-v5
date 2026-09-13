@@ -14,22 +14,25 @@ type GroupCoverProps = {
 export function GroupCover({ path, userId, style }: GroupCoverProps) {
   const colors = useColors();
   const coverQuery = useGroupCoverUrl(path, userId);
-  const [retriedUrl, setRetriedUrl] = useState<string | null>(null);
+  const [hasRetried, setHasRetried] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [unavailableUrl, setUnavailableUrl] = useState<string | null>(null);
   useEffect(() => {
-    setRetriedUrl(null);
+    setHasRetried(false);
+    setFailed(false);
     setUnavailableUrl(null);
   }, [path, userId]);
-  const coverUrl = coverQuery.data && coverQuery.data !== unavailableUrl
+  const coverUrl = !failed && coverQuery.data && coverQuery.data !== unavailableUrl
     ? coverQuery.data
     : null;
   const handleImageError = () => {
     if (!coverUrl) return;
-    if (retriedUrl === coverUrl) {
+    if (hasRetried) {
+      setFailed(true);
       setUnavailableUrl(coverUrl);
       return;
     }
-    setRetriedUrl(coverUrl);
+    setHasRetried(true);
     setUnavailableUrl(coverUrl);
     void coverQuery.refetch();
   };
