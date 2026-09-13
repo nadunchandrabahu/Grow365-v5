@@ -5,27 +5,50 @@ import { useColors } from '@/hooks/useColors';
 import { Typography } from '@/components/Typography';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
+import { authErrorMessage } from '@/lib/auth-errors';
+import { Button } from '@/components/Button';
 
 export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { user, signOut } = useAuth();
+  const [signOutError, setSignOutError] = React.useState<string | null>(null);
+  const [signingOut, setSigningOut] = React.useState<boolean>(false);
+  const displayName =
+    (typeof user?.user_metadata?.full_name === 'string' && user.user_metadata.full_name) ||
+    (typeof user?.user_metadata?.name === 'string' && user.user_metadata.name) ||
+    'Grow365 Reader';
+  const initial = displayName.trim().charAt(0).toUpperCase() || 'G';
 
   const menuItems = [
     { icon: 'settings', label: 'Settings', route: '/settings' },
     { icon: 'credit-card', label: 'Subscription', route: '/subscription' },
-    { icon: 'log-out', label: 'Sign Out', route: '/' },
   ];
+
+  const handleSignOut = async (): Promise<void> => {
+    setSigningOut(true);
+    setSignOutError(null);
+    try {
+      await signOut();
+      router.replace('/');
+    } catch (error) {
+      setSignOutError(authErrorMessage(error));
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 40, paddingBottom: 120 }]}>
         <View style={styles.header}>
           <View style={[styles.avatar, { backgroundColor: colors.secondary }]}>
-            <Typography variant="h1" style={{ color: colors.secondaryForeground }}>R</Typography>
+            <Typography variant="h1" style={{ color: colors.secondaryForeground }}>{initial}</Typography>
           </View>
-          <Typography variant="h2" style={styles.name}>Robert</Typography>
-          <Typography variant="body" color="muted">robert@example.com</Typography>
+          <Typography variant="h2" style={styles.name}>{displayName}</Typography>
+          <Typography variant="body" color="muted">{user?.email ?? ''}</Typography>
         </View>
 
         <View style={[styles.menu, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}>
@@ -45,6 +68,17 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           ))}
         </View>
+        {signOutError ? (
+          <Typography variant="body" color="destructive" style={styles.signOutError}>
+            {signOutError}
+          </Typography>
+        ) : null}
+        <Button
+          title="Sign Out"
+          variant="outline"
+          loading={signingOut}
+          onPress={() => void handleSignOut()}
+        />
       </ScrollView>
     </View>
   );
@@ -59,4 +93,5 @@ const styles = StyleSheet.create({
   menu: { borderWidth: 1, overflow: 'hidden' },
   menuItem: { flexDirection: 'row', alignItems: 'center', padding: 16 },
   menuIcon: { marginRight: 16 },
+  signOutError: { marginBottom: 16 },
 });

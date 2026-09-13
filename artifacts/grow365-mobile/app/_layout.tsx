@@ -1,12 +1,14 @@
 import React, { useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useColors } from '@/hooks/useColors';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 
 import {
   Inter_400Regular,
@@ -41,6 +43,36 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   const colors = useColors();
+  const router = useRouter();
+  const segments = useSegments();
+  const { session, loading } = useAuth();
+
+  useEffect(() => {
+    if (loading) return;
+
+    const firstSegment = segments[0];
+    const isRecovery = firstSegment === 'update-password';
+    const isPublic =
+      !firstSegment ||
+      firstSegment === 'sign-in' ||
+      firstSegment === 'sign-up' ||
+      firstSegment === 'reset-password';
+
+    if (session && isPublic && !isRecovery) {
+      router.replace('/(tabs)');
+    } else if (!session && !isPublic && !isRecovery) {
+      router.replace('/');
+    }
+  }, [loading, router, segments, session]);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator color={colors.primary} size="large" />
+      </View>
+    );
+  }
+
   return (
     <Stack 
       screenOptions={{ 
@@ -55,6 +87,7 @@ function RootLayoutNav() {
       <Stack.Screen name="sign-in" options={{ title: 'Sign In', headerBackTitle: 'Welcome' }} />
       <Stack.Screen name="sign-up" options={{ title: 'Sign Up', headerBackTitle: 'Welcome' }} />
       <Stack.Screen name="reset-password" options={{ title: 'Reset Password' }} />
+      <Stack.Screen name="update-password" options={{ title: 'Choose New Password' }} />
       <Stack.Screen name="setup" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="devotional/past" options={{ title: 'Past Devotionals' }} />
@@ -107,9 +140,11 @@ export default function RootLayout() {
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <GestureHandlerRootView style={{ flex: 1 }}>
-            <KeyboardProvider>
-              <RootLayoutNav />
-            </KeyboardProvider>
+            <AuthProvider>
+              <KeyboardProvider>
+                <RootLayoutNav />
+              </KeyboardProvider>
+            </AuthProvider>
           </GestureHandlerRootView>
         </QueryClientProvider>
       </ErrorBoundary>

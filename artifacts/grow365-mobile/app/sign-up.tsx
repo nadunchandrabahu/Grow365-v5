@@ -5,17 +5,61 @@ import { Typography } from '@/components/Typography';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { useRouter, Link } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  authErrorMessage,
+  validateEmail,
+  validateName,
+  validatePassword,
+  type AuthFormErrors,
+} from '@/lib/auth-errors';
 
 export default function SignUpScreen() {
   const colors = useColors();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [errors, setErrors] = useState<AuthFormErrors>({});
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
+  const { signUp } = useAuth();
 
-  const handleSignUp = () => {
-    // Navigate to setup
-    router.replace('/setup');
+  const handleSignUp = async (): Promise<void> => {
+    const nextErrors: AuthFormErrors = {
+      name: validateName(name),
+      email: validateEmail(email),
+      password: validatePassword(password),
+    };
+    setErrors(nextErrors);
+    if (nextErrors.name || nextErrors.email || nextErrors.password) return;
+
+    setSubmitting(true);
+    try {
+      const result = await signUp({ name, email, password });
+      if (result.requiresEmailConfirmation) {
+        setConfirmationEmail(email.trim());
+      } else {
+        router.replace('/setup');
+      }
+    } catch (error) {
+      setErrors({ form: authErrorMessage(error) });
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (confirmationEmail) {
+    return (
+      <View style={[styles.confirmation, { backgroundColor: colors.background }]}>
+        <Typography variant="h2" align="center" style={styles.title}>Check your email</Typography>
+        <Typography variant="body" color="muted" align="center" style={styles.subtitle}>
+          We sent a confirmation link to {confirmationEmail}. Open it, then return here to sign in.
+        </Typography>
+        <Button title="Go to Sign In" onPress={() => router.replace('/sign-in')} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
@@ -25,24 +69,48 @@ export default function SignUpScreen() {
       </Typography>
       
       <Input
+        label="Your Name"
+        placeholder="Enter your name"
+        autoCapitalize="words"
+        value={name}
+        onChangeText={(value) => {
+          setName(value);
+          setErrors((current) => ({ ...current, name: undefined, form: undefined }));
+        }}
+        error={errors.name}
+      />
+      <Input
         label="Email Address"
         placeholder="Enter your email"
         keyboardType="email-address"
         autoCapitalize="none"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(value) => {
+          setEmail(value);
+          setErrors((current) => ({ ...current, email: undefined, form: undefined }));
+        }}
+        error={errors.email}
       />
       <Input
         label="Password"
         placeholder="Create a password"
         secureTextEntry
         value={password}
-        onChangeText={setPassword}
+        onChangeText={(value) => {
+          setPassword(value);
+          setErrors((current) => ({ ...current, password: undefined, form: undefined }));
+        }}
+        error={errors.password}
       />
+      {errors.form ? (
+        <Typography variant="body" color="destructive" style={styles.formError}>
+          {errors.form}
+        </Typography>
+      ) : null}
       
       <View style={styles.spacer} />
       
-      <Button title="Create Account" onPress={handleSignUp} style={styles.button} />
+      <Button title="Create Account" onPress={() => void handleSignUp()} loading={submitting} style={styles.button} />
       
       <View style={styles.footer}>
         <Typography variant="caption" color="muted">Already have an account? </Typography>
@@ -61,5 +129,7 @@ const styles = StyleSheet.create({
   subtitle: { marginBottom: 32 },
   spacer: { flex: 1, minHeight: 40 },
   button: { marginBottom: 24 },
+  formError: { marginBottom: 16 },
   footer: { flexDirection: 'row', justifyContent: 'center' },
+  confirmation: { flex: 1, justifyContent: 'center', padding: 24 },
 });

@@ -5,15 +5,31 @@ import { Typography } from '@/components/Typography';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
+import { authErrorMessage, validateEmail } from '@/lib/auth-errors';
 
 export default function ResetPasswordScreen() {
   const colors = useColors();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const { sendPasswordReset } = useAuth();
 
-  const handleReset = () => {
-    setSent(true);
+  const handleReset = async (): Promise<void> => {
+    const validationError = validateEmail(email);
+    setError(validationError);
+    if (validationError) return;
+    setSubmitting(true);
+    try {
+      await sendPasswordReset(email);
+      setSent(true);
+    } catch (caught) {
+      setError(authErrorMessage(caught));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -30,11 +46,15 @@ export default function ResetPasswordScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(value) => {
+              setEmail(value);
+              setError(undefined);
+            }}
+            error={error}
           />
           
           <View style={styles.spacer} />
-          <Button title="Send Reset Link" onPress={handleReset} />
+          <Button title="Send Reset Link" onPress={() => void handleReset()} loading={submitting} />
         </>
       ) : (
         <View style={styles.successContainer}>

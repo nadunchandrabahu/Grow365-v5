@@ -5,16 +5,39 @@ import { Typography } from '@/components/Typography';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { useRouter, Link } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  authErrorMessage,
+  validateEmail,
+  type AuthFormErrors,
+} from '@/lib/auth-errors';
 
 export default function SignInScreen() {
   const colors = useColors();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<AuthFormErrors>({});
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const { signIn } = useAuth();
 
-  const handleSignIn = () => {
-    // Navigate to tabs
-    router.replace('/(tabs)');
+  const handleSignIn = async (): Promise<void> => {
+    const nextErrors: AuthFormErrors = {
+      email: validateEmail(email),
+      password: password ? undefined : 'Enter your password.',
+    };
+    setErrors(nextErrors);
+    if (nextErrors.email || nextErrors.password) return;
+
+    setSubmitting(true);
+    try {
+      await signIn(email, password);
+      router.replace('/(tabs)');
+    } catch (error) {
+      setErrors({ form: authErrorMessage(error) });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -30,21 +53,34 @@ export default function SignInScreen() {
         keyboardType="email-address"
         autoCapitalize="none"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(value) => {
+          setEmail(value);
+          setErrors((current) => ({ ...current, email: undefined, form: undefined }));
+        }}
+        error={errors.email}
       />
       <Input
         label="Password"
         placeholder="Enter your password"
         secureTextEntry
         value={password}
-        onChangeText={setPassword}
+        onChangeText={(value) => {
+          setPassword(value);
+          setErrors((current) => ({ ...current, password: undefined, form: undefined }));
+        }}
+        error={errors.password}
       />
+      {errors.form ? (
+        <Typography variant="body" color="destructive" style={styles.formError}>
+          {errors.form}
+        </Typography>
+      ) : null}
       
       <Link href="/reset-password" style={styles.forgotPassword}>
         <Typography variant="caption" color="muted">Forgot your password?</Typography>
       </Link>
       
-      <Button title="Sign In" onPress={handleSignIn} style={styles.button} />
+      <Button title="Sign In" onPress={() => void handleSignIn()} loading={submitting} style={styles.button} />
       
       <View style={styles.footer}>
         <Typography variant="caption" color="muted">Don't have an account? </Typography>
@@ -62,6 +98,7 @@ const styles = StyleSheet.create({
   title: { marginBottom: 8 },
   subtitle: { marginBottom: 32 },
   forgotPassword: { alignSelf: 'flex-start', marginBottom: 32 },
+  formError: { marginBottom: 20 },
   button: { marginBottom: 24 },
   footer: { flexDirection: 'row', justifyContent: 'center' },
 });
