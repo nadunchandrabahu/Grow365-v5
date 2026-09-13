@@ -91,7 +91,7 @@ function RootLayoutNav() {
       <Stack.Screen name="setup" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="devotional/past" options={{ title: 'Past Devotionals' }} />
-      <Stack.Screen name="devotional/[id]" options={{ title: 'Devotional', headerBackTitle: 'Back' }} />
+      <Stack.Screen name="devotional/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="groups/create" options={{ title: 'Create Group' }} />
       <Stack.Screen name="groups/join" options={{ title: 'Join Group' }} />
       <Stack.Screen name="groups/[id]" options={{ title: 'Group' }} />
