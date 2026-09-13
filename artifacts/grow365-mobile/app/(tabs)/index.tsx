@@ -1,56 +1,74 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { EmptyState, ErrorState, LoadingState } from '@/components/State';
 import { Typography } from '@/components/Typography';
 import { useAuth } from '@/contexts/AuthContext';
 import { useColors } from '@/hooks/useColors';
-import {
-  useLatestCompletedReading,
-  useTodayDevotional,
-} from '@/hooks/useHomeData';
 import { useProfile } from '@/hooks/useProfile';
+import {
+  useTodayDevotional,
+  useYearRibbon,
+  usePartialReading,
+  useRecentGroupActivity,
+} from '@/hooks/useHomeData';
 
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
-  weekday: 'long',
-  month: 'short',
-  day: 'numeric',
-});
+import { YearRibbon } from '@/components/YearRibbon';
+import { TodayDevotionalCard } from '@/components/TodayDevotionalCard';
+import { ResumeRow } from '@/components/ResumeRow';
+import { QuickLinks } from '@/components/QuickLinks';
+import { RecentActivity } from '@/components/RecentActivity';
 
-const shortDateFormatter = new Intl.DateTimeFormat(undefined, {
-  month: 'short',
-  day: 'numeric',
-});
+function formatToday(timeZone: string): string {
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric',
+      timeZone,
+    }).format(new Date());
+  } catch {
+    return new Intl.DateTimeFormat(undefined, {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    }).format(new Date());
+  }
+}
 
 export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const { user } = useAuth();
+  
   const profileQuery = useProfile(user?.id);
   const devotionalQuery = useTodayDevotional(user?.id);
-  const progressQuery = useLatestCompletedReading(user?.id);
+  const ribbonQuery = useYearRibbon(user?.id);
+  const partialReadingQuery = usePartialReading(user?.id);
+  const activityQuery = useRecentGroupActivity(user?.id);
 
-  if (profileQuery.isLoading || devotionalQuery.isLoading) {
+  const isLoading = profileQuery.isLoading || devotionalQuery.isLoading || ribbonQuery.isLoading;
+  const isError = profileQuery.isError || devotionalQuery.isError || ribbonQuery.isError;
+
+  if (isLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <LoadingState message="Preparing today’s reading..." />
+        <LoadingState message="Preparing your space..." />
       </View>
     );
   }
 
-  if (profileQuery.isError || devotionalQuery.isError) {
+  if (isError) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ErrorState
-          title="Today could not be loaded"
+          title="Couldn't load today"
           description="Check your connection and try again."
           onRetry={() => {
             void profileQuery.refetch();
             void devotionalQuery.refetch();
+            void ribbonQuery.refetch();
           }}
         />
       </View>
@@ -72,6 +90,8 @@ export default function HomeScreen() {
   }
 
   const devotional = devotionalQuery.data;
+  const partialReading = partialReadingQuery.data;
+  const ribbon = ribbonQuery.data;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -81,97 +101,106 @@ export default function HomeScreen() {
           { paddingTop: insets.top + 20, paddingBottom: 120 },
         ]}
       >
-        <Typography variant="reference" color="accent" style={styles.date}>
-          {dateFormatter.format(new Date()).toUpperCase()}
-        </Typography>
-        <Typography variant="h1" style={styles.title}>
-          Good morning, {profileQuery.data.display_name}.
-        </Typography>
+        <View style={styles.header}>
+          <Typography variant="reference" color="accent" style={styles.date}>
+            {formatToday(profileQuery.data.timezone).toUpperCase()}
+          </Typography>
+          <Typography variant="h1" style={styles.title}>
+            Good morning, {profileQuery.data.display_name}.
+          </Typography>
+          <Typography variant="body" color="muted" style={styles.journeyDay}>
+            Day {ribbon?.currentDay ?? 1} of your 365-day journey
+          </Typography>
+        </View>
+
+        {ribbon && (
+          <YearRibbon
+            currentDay={ribbon.currentDay}
+            completedDays={ribbon.completedDays}
+            dayToDevoId={ribbon.dayToDevoId}
+          />
+        )}
 
         {devotional ? (
-          <Card style={styles.todayCard}>
-            <Typography variant="reference" color="muted" style={styles.cardHeader}>
-              TODAY&apos;S DEVOTIONAL
-            </Typography>
-            <Typography variant="h2" style={styles.cardTitle}>
-              {devotional.title}
-            </Typography>
-            {devotional.memory_verse ? (
-              <Typography variant="journal" color="muted" style={styles.cardPreview}>
-                {devotional.memory_verse}
-              </Typography>
-            ) : devotional.description ? (
-              <Typography variant="body" color="muted" style={styles.cardPreview}>
-                {devotional.description}
-              </Typography>
-            ) : null}
-            <Button
-              title="Read Devotional"
-              onPress={() => router.push(`/devotional/${devotional.id}`)}
-              style={styles.cardButton}
-            />
-          </Card>
+          <View style={styles.cardContainer}>
+            <TodayDevotionalCard devotional={devotional} />
+          </View>
         ) : (
-          <Card style={styles.todayCard}>
+          <View style={styles.emptyContainer}>
             <EmptyState
               icon="book-open"
-              title="No devotional for today"
-              description="There is no published devotional available for your current journey day."
+              title="No reading for today"
+              description="There is no published reading available for your current journey day."
             />
-          </Card>
+          </View>
         )}
 
-        <Typography variant="h3" style={styles.sectionTitle}>Recent Activity</Typography>
-        {progressQuery.isLoading ? (
-          <Card style={styles.activityCard}>
-            <LoadingState message="Loading recent activity..." />
-          </Card>
-        ) : progressQuery.isError ? (
-          <Card style={styles.activityCard}>
-            <ErrorState
-              title="Activity could not be loaded"
-              description="Try again when your connection is available."
-              onRetry={() => void progressQuery.refetch()}
+        {partialReading && (
+          <View style={styles.resumeContainer}>
+            <ResumeRow
+              devotionalId={partialReading.devotional_id}
+              title={partialReading.devotionals.title}
+              dayOfYear={partialReading.devotionals.day_of_year}
+              scrollPct={partialReading.scroll_pct}
             />
-          </Card>
-        ) : progressQuery.data ? (
-          <Card style={styles.activityCard}>
-            <View style={styles.activityRow}>
-              <View style={[styles.statusDot, { backgroundColor: colors.success }]} />
-              <View style={styles.activityText}>
-                <Typography variant="body">Completed a reading</Typography>
-                <Typography variant="caption" color="muted">
-                  {progressQuery.data.devotional.title} ·{' '}
-                  {shortDateFormatter.format(new Date(progressQuery.data.completedAt))}
-                </Typography>
-              </View>
-            </View>
-          </Card>
-        ) : (
-          <Card style={styles.activityCard}>
-            <Typography variant="body" color="muted">
-              Completed readings will appear here.
-            </Typography>
-          </Card>
+          </View>
         )}
+
+        <View style={styles.linksContainer}>
+          <QuickLinks />
+        </View>
+
+        <View style={styles.activityContainer}>
+          {activityQuery.isLoading ? (
+            <LoadingState message="Loading activity..." />
+          ) : activityQuery.isError ? (
+            <ErrorState
+              title="Activity unavailable"
+              description="Could not load group activity."
+              onRetry={() => void activityQuery.refetch()}
+            />
+          ) : (
+            <RecentActivity activities={activityQuery.data || []} />
+          )}
+        </View>
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { padding: 24 },
-  date: { marginBottom: 12, letterSpacing: 1 },
-  title: { marginBottom: 32 },
-  todayCard: { padding: 24, marginBottom: 40, minHeight: 210 },
-  cardHeader: { marginBottom: 12, letterSpacing: 0.5 },
-  cardTitle: { marginBottom: 16 },
-  cardPreview: { marginBottom: 24 },
-  cardButton: { alignSelf: 'flex-start' },
-  sectionTitle: { marginBottom: 16 },
-  activityCard: { padding: 16, minHeight: 84 },
-  activityRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  activityText: { flex: 1 },
-  statusDot: { width: 12, height: 12, borderRadius: 6 },
+  container: { 
+    flex: 1 
+  },
+  content: { 
+    // minimal vertical padding, handled mostly by insets
+  },
+  header: {
+    paddingHorizontal: 24,
+    marginBottom: 32,
+  },
+  date: { 
+    marginBottom: 12, 
+    letterSpacing: 1 
+  },
+  title: { 
+    marginBottom: 8,
+  },
+  journeyDay: { marginBottom: 0 },
+  resumeContainer: {
+    paddingHorizontal: 24,
+  },
+  cardContainer: {
+    paddingHorizontal: 24,
+  },
+  emptyContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 40,
+  },
+  linksContainer: {
+    paddingHorizontal: 24,
+  },
+  activityContainer: {
+    paddingHorizontal: 24,
+  }
 });
