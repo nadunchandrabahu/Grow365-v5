@@ -6,14 +6,41 @@ import { Typography } from '@/components/Typography';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUpdateProfile } from '@/hooks/useProfile';
+import { authErrorMessage, validateName } from '@/lib/auth-errors';
 
 export default function SetupScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { user } = useAuth();
+  const initialName =
+    (typeof user?.user_metadata?.display_name === 'string' &&
+      user.user_metadata.display_name) ||
+    (typeof user?.user_metadata?.full_name === 'string' &&
+      user.user_metadata.full_name) ||
+    '';
+  const [name, setName] = useState<string>(initialName);
+  const [error, setError] = useState<string | undefined>();
+  const updateProfile = useUpdateProfile(user?.id);
 
-  const handleComplete = () => {
-    router.replace('/(tabs)');
+  const handleComplete = async (): Promise<void> => {
+    const nameError = validateName(name);
+    setError(nameError);
+    if (nameError) return;
+
+    try {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      await updateProfile.mutateAsync({
+        display_name: name.trim(),
+        timezone,
+        onboarded_at: new Date().toISOString(),
+      });
+      router.replace('/(tabs)');
+    } catch (caught) {
+      setError(authErrorMessage(caught));
+    }
   };
 
   return (
@@ -28,11 +55,21 @@ export default function SetupScreen() {
         <Input
           label="Preferred Name"
           placeholder="e.g. Robert or Mary"
+          value={name}
+          onChangeText={(value) => {
+            setName(value);
+            setError(undefined);
+          }}
+          error={error}
         />
         
         <View style={styles.spacer} />
         
-        <Button title="Complete Setup" onPress={handleComplete} />
+        <Button
+          title="Complete Setup"
+          onPress={() => void handleComplete()}
+          loading={updateProfile.isPending}
+        />
       </ScrollView>
     </View>
   );

@@ -113,7 +113,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { data: { full_name: name.trim(), name: name.trim() } },
+      options: {
+        data: {
+          display_name: name.trim(),
+          full_name: name.trim(),
+          name: name.trim(),
+        },
+      },
     });
     if (error) throw error;
     return { requiresEmailConfirmation: data.session === null };

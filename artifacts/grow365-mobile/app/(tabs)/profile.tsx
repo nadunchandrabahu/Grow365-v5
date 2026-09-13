@@ -8,6 +8,8 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { authErrorMessage } from '@/lib/auth-errors';
 import { Button } from '@/components/Button';
+import { EmptyState, ErrorState, LoadingState } from '@/components/State';
+import { useProfile } from '@/hooks/useProfile';
 
 export default function ProfileScreen() {
   const colors = useColors();
@@ -16,10 +18,8 @@ export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const [signOutError, setSignOutError] = React.useState<string | null>(null);
   const [signingOut, setSigningOut] = React.useState<boolean>(false);
-  const displayName =
-    (typeof user?.user_metadata?.full_name === 'string' && user.user_metadata.full_name) ||
-    (typeof user?.user_metadata?.name === 'string' && user.user_metadata.name) ||
-    'Grow365 Reader';
+  const profileQuery = useProfile(user?.id);
+  const displayName = profileQuery.data?.display_name ?? '';
   const initial = displayName.trim().charAt(0).toUpperCase() || 'G';
 
   const menuItems = [
@@ -39,6 +39,40 @@ export default function ProfileScreen() {
       setSigningOut(false);
     }
   };
+
+  if (profileQuery.isLoading) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <LoadingState message="Loading your profile..." />
+      </View>
+    );
+  }
+
+  if (profileQuery.isError) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <ErrorState
+          title="Your profile could not be loaded"
+          description="Check your connection and try again."
+          onRetry={() => void profileQuery.refetch()}
+        />
+      </View>
+    );
+  }
+
+  if (!profileQuery.data) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <EmptyState
+          icon="user"
+          title="Profile not found"
+          description="Your account is signed in, but its profile record is missing."
+          actionLabel="Try Again"
+          onAction={() => void profileQuery.refetch()}
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
