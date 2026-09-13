@@ -6,25 +6,39 @@ export type Devotional = Tables<'devotionals'> & {
   devotional_series?: Tables<'devotional_series'> | null;
 };
 
-export function useTodayDevotional(userId: string | undefined) {
-  return useQuery({
-    queryKey: ['today-devotional', userId],
-    enabled: Boolean(userId),
-    queryFn: async (): Promise<Devotional | null> => {
-      const { data: journeyDay, error: journeyError } = await supabase.rpc(
-        'current_journey_day',
-      );
-      if (journeyError) throw journeyError;
+function dateInTimezone(timezone: string): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value;
 
+  return `${value('year')}-${value('month')}-${value('day')}`;
+}
+
+export function useTodayDevotional(
+  userId: string | undefined,
+  timezone: string | undefined,
+) {
+  const localDate = timezone ? dateInTimezone(timezone) : undefined;
+
+  return useQuery({
+    queryKey: ['today-devotional', userId, localDate],
+    enabled: Boolean(userId && localDate),
+    queryFn: async (): Promise<Devotional | null> => {
       const { data, error } = await supabase
         .from('devotionals')
         .select('*, devotional_series(*)')
-        .eq('day_of_year', journeyDay)
+        .eq('publish_date', localDate!)
         .eq('status', 'published')
         .maybeSingle();
       if (error) throw error;
       return data as Devotional | null;
     },
+    refetchOnMount: 'always',
   });
 }
 

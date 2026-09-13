@@ -43,7 +43,10 @@ export default function HomeScreen() {
   const { user } = useAuth();
   
   const profileQuery = useProfile(user?.id);
-  const devotionalQuery = useTodayDevotional(user?.id);
+  const devotionalQuery = useTodayDevotional(
+    user?.id,
+    profileQuery.data?.timezone,
+  );
   const ribbonQuery = useYearRibbon(user?.id);
   const partialReadingQuery = usePartialReading(user?.id);
   const activityQuery = useRecentGroupActivity(user?.id);
