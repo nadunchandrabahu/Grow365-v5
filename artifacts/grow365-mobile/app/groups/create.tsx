@@ -137,7 +137,7 @@ export default function CreateGroupScreen() {
         Start a private Bible study and invite people with your code and password.
       </Typography>
 
-      <Pressable onPress={() => void pickCover()} style={styles.coverPicker}>
+      <Pressable onPress={() => void pickCover()} style={[styles.coverPicker, { borderColor: colors.border }]}>
         {coverAsset ? (
           <Image source={{ uri: coverAsset.uri }} style={styles.cover} />
         ) : (
@@ -209,7 +209,6 @@ const styles = StyleSheet.create({
     height: 150,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: '#AAB7AF',
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',

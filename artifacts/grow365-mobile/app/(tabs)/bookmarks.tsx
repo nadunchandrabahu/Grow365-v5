@@ -587,7 +587,7 @@ const styles = StyleSheet.create({
   cardCopy: { flex: 1, gap: 4 },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(18, 24, 21, 0.48)',
+    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'center',
     padding: 24,
   },

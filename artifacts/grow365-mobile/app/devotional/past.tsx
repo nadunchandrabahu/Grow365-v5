@@ -357,7 +357,7 @@ export default function PastDevotionalsScreen() {
                   style={{
                     color:
                       imageUrl && !isFuture
-                        ? '#FFFFFF'
+                        ? colors.primaryForeground
                         : colors.mutedForeground,
                   }}
                 >
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: 3,
-    backgroundColor: 'rgba(20, 26, 24, 0.42)',
+    backgroundColor: 'rgba(0,0,0,0.45)',
   },
   completed: {
     position: 'absolute',

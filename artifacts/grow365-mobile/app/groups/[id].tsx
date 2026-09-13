@@ -316,7 +316,7 @@ export default function GroupScreen() {
   const childrenOf = (parentId: string) =>
     replies.filter((reply) => reply.parent_id === parentId);
   const renderReply = (reply: (typeof replies)[number], depth = 0): React.ReactNode => (
-    <View key={reply.id} style={[styles.reply, { marginLeft: Math.min(depth, 3) * 14 }]}>
+    <View key={reply.id} style={[styles.reply, { marginLeft: Math.min(depth, 3) * 14, borderLeftColor: colors.border }]}>
       <View style={styles.replyHeader}>
         <Typography variant="caption" color="muted">
           {reply.profiles?.display_name ?? 'Former member'}
@@ -360,7 +360,7 @@ export default function GroupScreen() {
         <Pressable
           disabled={Boolean(pendingAction)}
           onPress={() => setSelected('')}
-          style={[styles.pickerOption, !selected && { borderColor: colors.accent }]}
+          style={[styles.pickerOption, { borderColor: selected === '' ? colors.accent : colors.border }]}
         >
           <Typography variant="caption">None</Typography>
         </Pressable>
@@ -371,7 +371,7 @@ export default function GroupScreen() {
             onPress={() => setSelected(devotional.id)}
             style={[
               styles.pickerOption,
-              selected === devotional.id && { borderColor: colors.accent },
+              { borderColor: selected === devotional.id ? colors.accent : colors.border },
             ]}
           >
             <Typography variant="caption" numberOfLines={1}>
@@ -467,7 +467,7 @@ export default function GroupScreen() {
     const isOwner = member.user_id === group.owner_id;
     return (
       <Card key={member.user_id} style={styles.member}>
-          <View style={styles.avatar}><Typography variant="h3">{(member.profiles?.display_name ?? 'Former member').slice(0, 1).toUpperCase()}</Typography></View>
+          <View style={[styles.avatar, { backgroundColor: colors.muted }]}><Typography variant="h3">{(member.profiles?.display_name ?? 'Former member').slice(0, 1).toUpperCase()}</Typography></View>
         <View style={styles.memberDetails}>
           <Typography variant="body">{member.profiles?.display_name ?? 'Former member'}</Typography>
           <Typography variant="caption" color="muted">{member.role}</Typography>
@@ -487,7 +487,7 @@ export default function GroupScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {tab !== 'Overview' && <Typography variant="h1" style={styles.pageTitle}>{tab}</Typography>}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.tabs, { borderBottomColor: colors.border }]}>
           {(['Overview', 'Devotionals', 'Notes', 'Questions', 'Members'] as Tab[]).map((item) => <Pressable key={item} onPress={() => setTab(item)} style={[styles.tab, { borderBottomColor: tab === item ? colors.accent : 'transparent' }]}><Typography variant="caption" color={tab === item ? 'foreground' : 'muted'}>{item}</Typography></Pressable>)}
         </ScrollView>
         {pendingAction && (
@@ -495,8 +495,8 @@ export default function GroupScreen() {
             {pendingAction}…
           </Typography>
         )}
-         {coverWarning && <Card style={styles.warningCard}><Typography variant="caption" color="muted">{coverWarning}</Typography></Card>}
-         {actionError && <Card style={styles.errorCard}><Typography variant="caption" color="destructive">{actionError}</Typography></Card>}
+         {coverWarning && <Card style={[styles.warningCard, { borderColor: colors.accent }]}><Typography variant="caption" color="muted">{coverWarning}</Typography></Card>}
+         {actionError && <Card style={[styles.errorCard, { borderColor: colors.destructive }]}><Typography variant="caption" color="destructive">{actionError}</Typography></Card>}
         {tabContent}
       </ScrollView>
       <Modal
@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
   state: { flex: 1 },
   content: { padding: 24, paddingBottom: 80 },
   pageTitle: { marginBottom: 12 },
-  tabs: { gap: 18, borderBottomWidth: 1, borderBottomColor: '#E2E8E4', marginBottom: 20 },
+  tabs: { gap: 18, borderBottomWidth: 1, marginBottom: 20 },
   tab: { paddingBottom: 12, borderBottomWidth: 2 },
   pending: { marginBottom: 10 },
   heroCard: { padding: 20 },
@@ -560,20 +560,20 @@ const styles = StyleSheet.create({
   choiceRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   choice: { padding: 10, borderWidth: 1, borderRadius: 8 },
   newButton: { marginBottom: 16 },
-  errorCard: { padding: 12, borderColor: '#B25050', marginBottom: 16 },
-  warningCard: { padding: 12, borderColor: '#C4A45A', marginBottom: 16 },
+  errorCard: { padding: 12, borderWidth: 1, marginBottom: 16 },
+  warningCard: { padding: 12, borderWidth: 1, marginBottom: 16 },
   repliesTitle: { marginTop: 12, marginBottom: 5 },
-  reply: { borderLeftWidth: 2, borderLeftColor: '#E2E8E4', paddingLeft: 10, marginTop: 9 },
+  reply: { borderLeftWidth: 2, paddingLeft: 10, marginTop: 9 },
   replyHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
   replying: { marginBottom: -8 },
   replyInput: { marginTop: 10, marginBottom: 8 },
   member: { padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  avatar: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E8EBE9' },
+  avatar: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
   memberDetails: { flex: 1 },
   memberActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 2, marginTop: 4 },
   picker: { marginBottom: 16 },
   pickerOptions: { gap: 8, paddingTop: 8, paddingBottom: 2 },
-  pickerOption: { maxWidth: 240, paddingHorizontal: 12, paddingVertical: 9, borderWidth: 1, borderColor: '#E2E8E4', borderRadius: 8 },
+  pickerOption: { maxWidth: 240, paddingHorizontal: 12, paddingVertical: 9, borderWidth: 1, borderRadius: 8 },
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 24 },
   confirmCard: { padding: 22 },
   confirmCopy: { marginTop: 8, marginBottom: 18 },

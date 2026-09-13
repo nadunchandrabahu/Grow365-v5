@@ -36,7 +36,7 @@ export function Button({
       break;
     case 'success':
       backgroundColor = (colors as any).success;
-      textColor = (colors as any).successForeground || '#FFF';
+      textColor = (colors as any).successForeground;
       break;
     case 'outline':
       borderColor = colors.border;

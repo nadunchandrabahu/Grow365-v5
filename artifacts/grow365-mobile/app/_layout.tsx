@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useColors } from '@/hooks/useColors';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 
@@ -145,6 +146,7 @@ export default function RootLayout() {
           <GestureHandlerRootView style={{ flex: 1 }}>
             <AuthProvider>
               <KeyboardProvider>
+                <StatusBar style="dark" />
                 <RootLayoutNav />
               </KeyboardProvider>
             </AuthProvider>

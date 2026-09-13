@@ -12,7 +12,16 @@
       "bundleIdentifier": "net.grow365.app"
     },
     "android": {
-      "package": "net.grow365.app"
+      "package": "net.grow365.app",
+      "backgroundColor": "#F7F8F6"
+    },
+    "androidStatusBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#F7F8F6"
+    },
+    "androidNavigationBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#F7F8F6"
     },
     "web": {
       "favicon": "./assets/images/icon.png"

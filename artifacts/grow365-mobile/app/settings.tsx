@@ -357,8 +357,8 @@ export default function SettingsScreen() {
       <Button title="Save settings" loading={busy || updateProfile.isPending} onPress={() => void saveProfile()} style={styles.saveButton} />
 
       <SectionTitle>Legal</SectionTitle>
-      <Pressable style={styles.linkRow} onPress={() => router.push('/privacy')}><Typography variant="body">Privacy policy</Typography><Feather name="chevron-right" size={18} color={colors.mutedForeground} /></Pressable>
-      <Pressable style={styles.linkRow} onPress={() => router.push('/terms')}><Typography variant="body">Terms of use</Typography><Feather name="chevron-right" size={18} color={colors.mutedForeground} /></Pressable>
+      <Pressable style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={() => router.push('/privacy')}><Typography variant="body">Privacy policy</Typography><Feather name="chevron-right" size={18} color={colors.mutedForeground} /></Pressable>
+      <Pressable style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={() => router.push('/terms')}><Typography variant="body">Terms of use</Typography><Feather name="chevron-right" size={18} color={colors.mutedForeground} /></Pressable>
       <View style={styles.version}><Typography variant="caption" color="muted">Grow365 version 1.0.0</Typography></View>
       <Button title="Sign out" variant="outline" loading={busy} onPress={() => void handleSignOut()} />
       <Button title="Delete my account" variant="ghost" onPress={() => { setDeleteText(''); setDeleteOpen(true); }} style={{ borderColor: colors.destructive }} />
@@ -371,7 +371,7 @@ export default function SettingsScreen() {
           <ScrollView style={styles.deleteScroll} contentContainerStyle={styles.deleteScrollContent} keyboardShouldPersistTaps="handled">
             <Typography variant="h3">Delete your account?</Typography>
             <Typography variant="body" color="muted" style={styles.modalBody}>Your journal, bookmarks, reading progress, subscription record, group memberships, and avatar will be deleted permanently. Group discussion authors remain as “Former member”. This cannot be undone.</Typography>
-            {ownedGroups.isLoading ? <LoadingState message="Checking group ownership…" /> : ownedGroups.isError ? <Typography variant="body" color="destructive">Owned groups could not be loaded. Try again before deleting.</Typography> : ownedGroups.data?.length ? <View style={styles.transferBox}><Typography variant="body">Transfer ownership before deleting:</Typography>{ownedGroups.data.map((group) => <View key={group.id} style={styles.ownedGroup}><Typography variant="body">{group.name}</Typography>{group.members.length ? group.members.map((member) => <Button key={member.user_id} title={`Transfer to ${member.profiles?.display_name ?? 'Former member'}`} size="small" variant="outline" disabled={busy} onPress={() => void transfer(group.id, member.user_id)} />) : <Typography variant="caption" color="muted">This group has no other members.</Typography>}</View>)}</View> : null}
+            {ownedGroups.isLoading ? <LoadingState message="Checking group ownership…" /> : ownedGroups.isError ? <Typography variant="body" color="destructive">Owned groups could not be loaded. Try again before deleting.</Typography> : ownedGroups.data?.length ? <View style={styles.transferBox}><Typography variant="body">Transfer ownership before deleting:</Typography>{ownedGroups.data.map((group) => <View key={group.id} style={[styles.ownedGroup, { borderColor: colors.border }]}><Typography variant="body">{group.name}</Typography>{group.members.length ? group.members.map((member) => <Button key={member.user_id} title={`Transfer to ${member.profiles?.display_name ?? 'Former member'}`} size="small" variant="outline" disabled={busy} onPress={() => void transfer(group.id, member.user_id)} />) : <Typography variant="caption" color="muted">This group has no other members.</Typography>}</View>)}</View> : null}
             <Input label='Type DELETE to confirm' value={deleteText} onChangeText={setDeleteText} autoCapitalize="characters" />
           </ScrollView>
           <View style={styles.modalActions}><Button title="Cancel" variant="ghost" onPress={() => setDeleteOpen(false)} /><Button title="Delete permanently" loading={busy} disabled={deleteText !== 'DELETE' || ownedGroups.isLoading || ownedGroups.isError || ownedGroups.data === undefined || Boolean(ownedGroups.data.length)} onPress={() => void confirmDelete()} /></View>
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
   timezoneOption: { padding: 14, flexDirection: 'row', justifyContent: 'space-between' },
   feedback: { marginTop: 14 },
   saveButton: { marginTop: 18 },
-  linkRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ddd' },
+  linkRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, borderBottomWidth: 1 },
   version: { alignItems: 'center', paddingVertical: 18 },
   modalBackdrop: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: 'rgba(0,0,0,0.45)' },
   modalCard: { borderRadius: 16, padding: 22, maxHeight: '90%' },
@@ -404,5 +404,5 @@ const styles = StyleSheet.create({
   modalBody: { marginTop: 12, lineHeight: 21 },
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 18 },
   transferBox: { marginTop: 18, gap: 10 },
-  ownedGroup: { gap: 8, padding: 12, borderWidth: 1, borderColor: '#ddd', borderRadius: 10 },
+  ownedGroup: { gap: 8, padding: 12, borderWidth: 1, borderRadius: 10 },
 });
