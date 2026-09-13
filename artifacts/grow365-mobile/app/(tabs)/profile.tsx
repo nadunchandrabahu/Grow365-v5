@@ -8,7 +8,6 @@ import { useColors } from '@/hooks/useColors';
 import { useProfile } from '@/hooks/useProfile';
 import { useJourneySummary } from '@/hooks/useJourneySummary';
 import { useMyGroups } from '@/hooks/useGroupContent';
-import { useSubscriptionEntitlement } from '@/hooks/useSubscriptionEntitlement';
 import { useSubscriptionDetails } from '@/hooks/useSubscriptionDetails';
 import { manageableStorePlatform, openSubscriptionManagement } from '@/lib/subscription-management';
 import { cleanupUserDeviceData } from '@/lib/user-device-cleanup';
@@ -30,7 +29,6 @@ export default function ProfileScreen() {
   const profileQuery = useProfile(user?.id);
   const journeyQuery = useJourneySummary(user?.id);
   const groupsQuery = useMyGroups(user?.id);
-  const subscriptionQuery = useSubscriptionEntitlement(user?.id);
   const subscriptionDetailsQuery = useSubscriptionDetails(user?.id);
   const [signOutError, setSignOutError] = React.useState<string | null>(null);
   const [signingOut, setSigningOut] = React.useState(false);
@@ -66,6 +64,30 @@ export default function ProfileScreen() {
     year: 'numeric',
   });
 
+  const getSubStatusText = () => {
+    const details = subscriptionDetailsQuery.data;
+    if (!details || !details.active) return 'No active subscription';
+
+    switch (details.status) {
+      case 'granted':
+        return 'Granted Access';
+      case 'cancelled':
+        if (details.period_end) {
+          const date = new Date(details.period_end).toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          });
+          return `Cancelled — Active Until ${date}`;
+        }
+        return 'Cancelled — Active';
+      case 'trial':
+        return 'Active (Trial)';
+      default:
+        return 'Active Subscription';
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 32, paddingBottom: 120 }]}>
@@ -88,19 +110,21 @@ export default function ProfileScreen() {
 
         <View style={styles.sectionHeading}><Typography variant="h3">Subscription</Typography></View>
         <Card style={styles.subscriptionCard}>
-          {subscriptionQuery.isLoading ? <Typography variant="body" color="muted">Checking your subscription…</Typography> : subscriptionQuery.isError ? <Typography variant="body" color="destructive">Subscription status is unavailable.</Typography> : (
+          {subscriptionDetailsQuery.isLoading ? <Typography variant="body" color="muted">Checking your subscription…</Typography> : subscriptionDetailsQuery.isError ? <Typography variant="body" color="destructive">Subscription status is unavailable.</Typography> : (
             <>
               <View style={styles.subscriptionRow}>
-                <Feather name={subscriptionQuery.data ? 'check-circle' : 'heart'} size={21} color={subscriptionQuery.data ? colors.success : colors.accent} />
+                <Feather name={subscriptionDetailsQuery.data?.active ? 'check-circle' : 'heart'} size={21} color={subscriptionDetailsQuery.data?.active ? colors.success : colors.foreground} />
                 <View style={styles.subscriptionText}>
-                  <Typography variant="body">{subscriptionQuery.data ? 'Active Grow365 subscription' : 'No active subscription'}</Typography>
-                  <Typography variant="caption" color="muted">{subscriptionQuery.data ? 'Thank you for supporting this quiet space.' : 'Support daily devotionals and the Grow365 community.'}</Typography>
+                  <Typography variant="body">{getSubStatusText()}</Typography>
+                  <Typography variant="caption" color="muted">{subscriptionDetailsQuery.data?.active ? 'Thank you for supporting this quiet space.' : 'Support daily devotionals and the Grow365 community.'}</Typography>
                 </View>
               </View>
-              {subscriptionQuery.data && subscriptionDetailsQuery.data && manageableStorePlatform(subscriptionDetailsQuery.data.platform, subscriptionDetailsQuery.data.granted_reason) ? (
+              {subscriptionDetailsQuery.data?.active &&
+              subscriptionDetailsQuery.data.status !== 'granted' &&
+              manageableStorePlatform(subscriptionDetailsQuery.data.platform, subscriptionDetailsQuery.data.granted_reason) ? (
                 <Button title="Manage subscription" variant="ghost" size="small" onPress={() => void openSubscriptionManagement(manageableStorePlatform(subscriptionDetailsQuery.data!.platform, subscriptionDetailsQuery.data!.granted_reason)!).catch((error) => setSignOutError(authErrorMessage(error)))} />
               ) : (
-                <Button title={subscriptionQuery.data ? 'Subscription details' : 'Learn about subscription'} variant="ghost" size="small" onPress={() => router.push('/subscription')} />
+                <Button title={subscriptionDetailsQuery.data?.active ? 'Subscription details' : 'Learn about subscription'} variant="ghost" size="small" onPress={() => router.push('/subscription')} />
               )}
             </>
           )}

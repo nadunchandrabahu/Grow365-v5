@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 
 export type SubscriptionDetails = Pick<
   Tables<'subscriptions'>,
-  'platform' | 'granted_reason' | 'status' | 'period_end' | 'entitlement'
+  'platform' | 'granted_reason' | 'status' | 'period_end' | 'entitlement' | 'product_id' | 'will_renew' | 'is_in_grace' | 'updated_at'
 > & { active: boolean };
 
 export function useSubscriptionDetails(userId: string | undefined) {
@@ -18,7 +18,7 @@ export function useSubscriptionDetails(userId: string | undefined) {
         supabase.rpc('has_active_subscription', { uid: userId }),
         supabase
           .from('subscriptions')
-          .select('platform, granted_reason, status, period_end, entitlement')
+          .select('platform, granted_reason, status, period_end, entitlement, product_id, will_renew, is_in_grace, updated_at')
           .eq('user_id', userId)
           .maybeSingle(),
       ]);
