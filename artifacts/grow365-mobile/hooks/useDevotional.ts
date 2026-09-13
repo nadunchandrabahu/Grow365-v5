@@ -118,6 +118,7 @@ export function useSaveReadingProgress(
       queryClient.setQueryData(progressKey(userId, devotionalId), progress);
       void queryClient.invalidateQueries({ queryKey: ['year-ribbon', userId] });
       void queryClient.invalidateQueries({ queryKey: ['partial-reading', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['devotional-archive', userId] });
     },
   });
 }
