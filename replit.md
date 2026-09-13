@@ -43,6 +43,7 @@ _Describe the high-level user-facing capabilities of this app once they exist._
 - State limitations plainly rather than adding workarounds.
 - Published Adobe Express devotionals must load directly as the top-level `react-native-webview` URL, never through an iframe or HTML wrapper.
 - Never restyle Adobe Express devotional content. Injection is limited to viewport locking, Adobe branding removal, and scroll tracking/restoration.
+- Journal entries are strictly private: never add sharing UI, always save `is_private: true`, and keep `group_id` null.
 
 ## Gotchas
 

@@ -448,7 +448,7 @@ export default function DevotionalReaderScreen() {
         </Pressable>
         
         <Pressable 
-          onPress={() => router.push(`/(tabs)/journal?devotionalId=${devotional.id}`)}
+          onPress={() => router.push(`/journal/new?devotionalId=${devotional.id}`)}
           style={styles.actionButton}
           accessibilityRole="button"
           accessibilityLabel="Journal this devotional"

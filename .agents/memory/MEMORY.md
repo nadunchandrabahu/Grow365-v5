@@ -1,1 +1,2 @@
 - [Supabase profile lifecycle](supabase-profile-lifecycle.md) — profile rows are trigger-created from auth metadata; send display_name and treat the row as the app identity.
+- [Journal privacy enforcement](journal-privacy-enforcement.md) — journal CRUD and search are server-scoped to auth.uid; preserve both server and client privacy guards.
