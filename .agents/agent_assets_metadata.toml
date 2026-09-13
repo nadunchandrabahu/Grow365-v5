@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "Rz5F4kwf17_IbutXeg52p"
+uri = "file://screenshots/adobe-devotional-sept-12.png"
+type = "image"
+title = "Day 255 — Humility and Unity cover"
+description = "Upload this PNG to the devotional-assets bucket at covers/day-255-humility-and-unity.png."
+logical_id = "b41688f7-828f-4121-a380-c8100f4116dd"
+content_hash = "sha256:a4e6453e0006eacc88130448944739fea435c5181074bc0d32b62d8076b1c847"
+size = 2549470
+mtime_ms = 1789263474163
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:fbd8edbd-1d5c-4481-94a6-861ead26205a/b41688f7-828f-4121-a380-c8100f4116dd/585b2973-56a2-40a3-a915-387d3c38a7e0"
+storage_version_token = "1789263801819948"
+content_type = "image/png"
