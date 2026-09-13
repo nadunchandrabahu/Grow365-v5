@@ -95,7 +95,10 @@ export default function JournalEditorScreen() {
   const [revision, setRevision] = useState<number>(0);
 
   const entryQuery = useJournalEntry(user?.id, entryId);
-  const devotionalQuery = useDevotional(draft.devotionalId ?? undefined);
+  const devotionalQuery = useDevotional(
+    user?.id,
+    draft.devotionalId ?? undefined,
+  );
   const saveEntry = useSaveJournalEntry();
   const deleteEntry = useDeleteJournalEntry();
 

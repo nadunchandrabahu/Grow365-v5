@@ -13,15 +13,19 @@ export type DevotionalDetail = Tables<'devotionals'> & {
 const progressKey = (userId: string | undefined, devotionalId: string | undefined) =>
   ['reading-progress', userId, devotionalId] as const;
 
-const devotionalCacheKey = (devotionalId: string) =>
-  `grow365.devotional-metadata.${devotionalId}`;
+const devotionalCacheKey = (userId: string, devotionalId: string) =>
+  `grow365.devotional-metadata.${userId}.${devotionalId}`;
 
-export function useDevotional(devotionalId: string | undefined) {
+export function useDevotional(
+  userId: string | undefined,
+  devotionalId: string | undefined,
+) {
   return useQuery({
-    queryKey: ['devotional', devotionalId],
-    enabled: Boolean(devotionalId),
+    queryKey: ['devotional', userId, devotionalId],
+    enabled: Boolean(userId && devotionalId),
+    gcTime: 0,
     queryFn: async (): Promise<DevotionalDetail | null> => {
-      if (!devotionalId) return null;
+      if (!userId || !devotionalId) return null;
       try {
         const { data, error } = await supabase
           .from('devotionals')
@@ -33,15 +37,21 @@ export function useDevotional(devotionalId: string | undefined) {
 
         if (data) {
           void AsyncStorage.setItem(
-            devotionalCacheKey(devotionalId),
+            devotionalCacheKey(userId, devotionalId),
             JSON.stringify(data),
           );
         }
         return data;
       } catch (error) {
-        const cached = await AsyncStorage.getItem(devotionalCacheKey(devotionalId));
+        const key = devotionalCacheKey(userId, devotionalId);
+        const cached = await AsyncStorage.getItem(key);
         if (!cached) throw error;
-        return JSON.parse(cached) as DevotionalDetail;
+        const parsed = JSON.parse(cached) as DevotionalDetail;
+        if (!parsed.is_free) {
+          await AsyncStorage.removeItem(key);
+          throw error;
+        }
+        return parsed;
       }
     },
   });

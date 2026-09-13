@@ -5,11 +5,16 @@ import { useColors } from '@/hooks/useColors';
 import { Typography } from '@/components/Typography';
 import { Card } from '@/components/Card';
 import { useRouter } from 'expo-router';
+import { EmptyState, ErrorState, LoadingState } from '@/components/State';
+import { useAuth } from '@/contexts/AuthContext';
+import { useMyGroups } from '@/hooks/useGroupContent';
 
 export default function StudyScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { user } = useAuth();
+  const groupsQuery = useMyGroups(user?.id);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -42,13 +47,45 @@ export default function StudyScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity onPress={() => router.push('/groups/1')} activeOpacity={0.7}>
+        {groupsQuery.isLoading ? (
+          <LoadingState message="Loading your groups..." />
+        ) : groupsQuery.isError ? (
+          <ErrorState
+            title="Groups are unavailable"
+            description="Check your connection and try again."
+            onRetry={() => void groupsQuery.refetch()}
+          />
+        ) : groupsQuery.data?.length ? (
+          groupsQuery.data.map((group) => (
+            <TouchableOpacity
+              key={group.id}
+              onPress={() => router.push(`/groups/${group.id}`)}
+              activeOpacity={0.7}
+            >
+              <Card style={styles.planCard}>
+                <Typography variant="reference" color="muted" style={styles.groupLabel}>
+                  YOUR GROUP
+                </Typography>
+                <Typography variant="h3" style={styles.cardTitle}>
+                  {group.name}
+                </Typography>
+                {group.description && (
+                  <Typography variant="body" color="muted" numberOfLines={2}>
+                    {group.description}
+                  </Typography>
+                )}
+              </Card>
+            </TouchableOpacity>
+          ))
+        ) : (
           <Card style={styles.planCard}>
-            <Typography variant="reference" color="muted" style={{marginBottom: 8}}>YOUR GROUPS</Typography>
-            <Typography variant="h3" style={styles.cardTitle}>Morning Fellowship</Typography>
-            <Typography variant="body" color="muted">3 active members</Typography>
+            <EmptyState
+              icon="users"
+              title="No groups yet"
+              description="Create a group or join one to begin sharing notes and questions."
+            />
           </Card>
-        </TouchableOpacity>
+        )}
       </ScrollView>
     </View>
   );
@@ -64,4 +101,5 @@ const styles = StyleSheet.create({
   groupActions: { flexDirection: 'row', gap: 16, marginBottom: 24 },
   actionBox: { flex: 1, padding: 16, alignItems: 'center' },
   actionText: { fontFamily: 'Inter_500Medium' },
+  groupLabel: { marginBottom: 8 },
 });

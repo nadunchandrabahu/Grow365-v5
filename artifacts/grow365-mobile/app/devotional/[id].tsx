@@ -175,7 +175,7 @@ export default function DevotionalReaderScreen() {
   const [webViewError, setWebViewError] = useState(false);
   const [failedCoverUrl, setFailedCoverUrl] = useState<string | null>(null);
 
-  const devotionalQuery = useDevotional(devotionalId);
+  const devotionalQuery = useDevotional(user?.id, devotionalId);
   const progressQuery = useReadingProgress(user?.id, devotionalId);
   const saveProgress = useSaveReadingProgress(user?.id, devotionalId);
   const profileQuery = useProfile(user?.id);
@@ -219,7 +219,12 @@ export default function DevotionalReaderScreen() {
     [progressQuery.data?.completed_at, saveProgress]
   );
 
-  if (devotionalQuery.isLoading || progressQuery.isLoading) {
+  if (
+    devotionalQuery.isLoading ||
+    progressQuery.isLoading ||
+    (devotionalQuery.isFetching &&
+      Boolean(devotionalQuery.data && !devotionalQuery.data.is_free))
+  ) {
     return (
       <View style={[styles.state, { backgroundColor: colors.background }]}>
         <LoadingState message="Opening your reading..." />
