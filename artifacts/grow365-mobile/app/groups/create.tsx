@@ -15,6 +15,26 @@ import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { supabase } from '@/lib/supabase';
 
+function safeCoverExtension(asset: ImagePicker.ImagePickerAsset): string {
+  const fileExtension = asset.fileName
+    ?.split('.')
+    .pop()
+    ?.toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+  if (fileExtension && ['jpg', 'jpeg', 'png', 'webp', 'heic'].includes(fileExtension)) {
+    return fileExtension === 'jpeg' ? 'jpg' : fileExtension;
+  }
+  if (asset.mimeType === 'image/png') return 'png';
+  if (asset.mimeType === 'image/webp') return 'webp';
+  if (asset.mimeType === 'image/heic') return 'heic';
+  return 'jpg';
+}
+
+function coverContentType(asset: ImagePicker.ImagePickerAsset, extension: string): string {
+  if (asset.mimeType?.startsWith('image/')) return asset.mimeType;
+  return extension === 'jpg' ? 'image/jpeg' : `image/${extension}`;
+}
+
 export default function CreateGroupScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -23,7 +43,7 @@ export default function CreateGroupScreen() {
   const [description, setDescription] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [secret, setSecret] = useState('');
-  const [coverUri, setCoverUri] = useState<string | null>(null);
+  const [coverAsset, setCoverAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const createGroup = useMutation({
@@ -43,11 +63,55 @@ export default function CreateGroupScreen() {
       });
       if (rpcError) throw rpcError;
       if (!data) throw new Error('The group was created without an id.');
-      return data;
+      let coverWarning: string | null = null;
+      if (coverAsset) {
+        let uploadedCoverPath: string | null = null;
+        try {
+          const extension = safeCoverExtension(coverAsset);
+          const coverPath = `${data}/cover.${extension}`;
+          const imageResponse = await fetch(coverAsset.uri);
+          if (!imageResponse.ok) throw new Error('Could not read the selected image.');
+          const imageData = await imageResponse.arrayBuffer();
+          const { error: uploadError } = await supabase.storage
+            .from('group-covers')
+            .upload(coverPath, imageData, {
+              contentType: coverContentType(coverAsset, extension),
+              upsert: true,
+            });
+          if (uploadError) throw uploadError;
+          uploadedCoverPath = coverPath;
+          const { data: updatedGroup, error: updateError } = await supabase
+            .from('groups')
+            .update({ cover_path: coverPath })
+            .eq('id', data)
+            .select('id, cover_path')
+            .single();
+          if (
+            updateError ||
+            !updatedGroup ||
+            updatedGroup.cover_path !== coverPath
+          ) {
+            throw updateError ?? new Error('The group cover path was not saved.');
+          }
+        } catch {
+          if (uploadedCoverPath) {
+            await supabase.storage
+              .from('group-covers')
+              .remove([uploadedCoverPath])
+              .catch(() => undefined);
+          }
+          // The group is intentionally retained when its optional cover fails.
+          coverWarning = 'Your group was created, but its cover could not be saved. You can continue without a cover for now.';
+        }
+      }
+      return { groupId: data, coverWarning };
     },
-    onSuccess: (groupId) => {
+    onSuccess: ({ groupId, coverWarning }) => {
       void queryClient.invalidateQueries({ queryKey: ['my-groups'] });
-      router.replace(`/groups/${groupId}`);
+      router.replace({
+        pathname: '/groups/[id]',
+        params: { id: groupId, ...(coverWarning ? { coverWarning } : {}) },
+      });
     },
     onError: (mutationError: Error) => setError(mutationError.message),
   });
@@ -59,7 +123,7 @@ export default function CreateGroupScreen() {
       aspect: [16, 9],
       quality: 0.8,
     });
-    if (!result.canceled) setCoverUri(result.assets[0]?.uri ?? null);
+    if (!result.canceled) setCoverAsset(result.assets[0] ?? null);
   };
 
   return (
@@ -74,8 +138,8 @@ export default function CreateGroupScreen() {
       </Typography>
 
       <Pressable onPress={() => void pickCover()} style={styles.coverPicker}>
-        {coverUri ? (
-          <Image source={{ uri: coverUri }} style={styles.cover} />
+        {coverAsset ? (
+          <Image source={{ uri: coverAsset.uri }} style={styles.cover} />
         ) : (
           <Typography variant="body" color="muted">
             Add a cover image (optional)
@@ -83,8 +147,8 @@ export default function CreateGroupScreen() {
         )}
       </Pressable>
       <Typography variant="caption" color="muted" style={styles.coverNote}>
-        This preview stays on this device. No cover is written to the database unless
-        an authorized storage bucket is configured.
+        Your cover is uploaded privately after the group is created. Only group members
+        can view it.
       </Typography>
 
       <Input

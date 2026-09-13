@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { Typography } from '@/components/Typography';
 import { Card } from '@/components/Card';
+import { GroupCover } from '@/components/GroupCover';
 import { useRouter } from 'expo-router';
 import { EmptyState, ErrorState, LoadingState } from '@/components/State';
 import { useAuth } from '@/contexts/AuthContext';
@@ -63,6 +64,7 @@ export default function StudyScreen() {
               activeOpacity={0.7}
             >
               <Card style={styles.planCard}>
+                <GroupCover path={group.cover_path} userId={user?.id} style={styles.groupCover} />
                 <Typography variant="reference" color="muted" style={styles.groupLabel}>
                   YOUR GROUP
                 </Typography>
@@ -102,4 +104,5 @@ const styles = StyleSheet.create({
   actionBox: { flex: 1, padding: 16, alignItems: 'center' },
   actionText: { fontFamily: 'Inter_500Medium' },
   groupLabel: { marginBottom: 8 },
+  groupCover: { minHeight: 116, marginBottom: 16 },
 });

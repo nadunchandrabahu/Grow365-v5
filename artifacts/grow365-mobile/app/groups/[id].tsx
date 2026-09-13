@@ -10,6 +10,7 @@ import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card } from '@/components/Card';
+import { GroupCover } from '@/components/GroupCover';
 import { EmptyState, ErrorState, LoadingState } from '@/components/State';
 import { Typography } from '@/components/Typography';
 import { Button } from '@/components/Button';
@@ -73,8 +74,12 @@ export default function GroupScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const params = useLocalSearchParams<{ id?: string | string[] }>();
+  const params = useLocalSearchParams<{
+    id?: string | string[];
+    coverWarning?: string | string[];
+  }>();
   const groupId = one(params.id);
+  const coverWarning = one(params.coverWarning);
   const groupQuery = useGroupContent(user?.id, groupId);
   const [tab, setTab] = useState<Tab>('Overview');
   const [actionError, setActionError] = useState<string | null>(null);
@@ -440,7 +445,13 @@ export default function GroupScreen() {
 
   const overview = (
     <>
-      <Card style={styles.heroCard}><Typography variant="reference" color="muted">YOUR GROUP</Typography><Typography variant="h1" style={styles.title}>{group.name}</Typography><Typography variant="body" color="muted">{memberCount} {memberCount === 1 ? 'member' : 'members'}</Typography>{group.description && <Typography variant="body" color="muted" style={styles.description}>{group.description}</Typography>}</Card>
+       <Card style={styles.heroCard}>
+         <GroupCover path={group.cover_path} userId={user?.id} style={styles.heroCover} />
+         <Typography variant="reference" color="muted">YOUR GROUP</Typography>
+         <Typography variant="h1" style={styles.title}>{group.name}</Typography>
+         <Typography variant="body" color="muted">{memberCount} {memberCount === 1 ? 'member' : 'members'}</Typography>
+         {group.description && <Typography variant="body" color="muted" style={styles.description}>{group.description}</Typography>}
+       </Card>
       <Typography variant="h3" style={styles.sectionTitle}>Recent notes</Typography>
       {notes.slice(0, 2).map(noteCard)}
       {!notes.length && <Typography variant="body" color="muted">No shared notes yet.</Typography>}
@@ -484,7 +495,8 @@ export default function GroupScreen() {
             {pendingAction}…
           </Typography>
         )}
-        {actionError && <Card style={styles.errorCard}><Typography variant="caption" color="destructive">{actionError}</Typography></Card>}
+         {coverWarning && <Card style={styles.warningCard}><Typography variant="caption" color="muted">{coverWarning}</Typography></Card>}
+         {actionError && <Card style={styles.errorCard}><Typography variant="caption" color="destructive">{actionError}</Typography></Card>}
         {tabContent}
       </ScrollView>
       <Modal
@@ -533,6 +545,7 @@ const styles = StyleSheet.create({
   tab: { paddingBottom: 12, borderBottomWidth: 2 },
   pending: { marginBottom: 10 },
   heroCard: { padding: 20 },
+  heroCover: { minHeight: 150, marginBottom: 18 },
   title: { marginTop: 6, marginBottom: 8 },
   description: { marginTop: 12 },
   sectionTitle: { marginTop: 26, marginBottom: 12 },
@@ -548,6 +561,7 @@ const styles = StyleSheet.create({
   choice: { padding: 10, borderWidth: 1, borderRadius: 8 },
   newButton: { marginBottom: 16 },
   errorCard: { padding: 12, borderColor: '#B25050', marginBottom: 16 },
+  warningCard: { padding: 12, borderColor: '#C4A45A', marginBottom: 16 },
   repliesTitle: { marginTop: 12, marginBottom: 5 },
   reply: { borderLeftWidth: 2, borderLeftColor: '#E2E8E4', paddingLeft: 10, marginTop: 9 },
   replyHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
